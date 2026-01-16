@@ -1,68 +1,55 @@
 import "dotenv/config";
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
+import { logger as honoLogger } from "hono/logger";
+import { chatRoutes } from "./routes/chat.routes.js";
+import { agentRoutes } from "./routes/agents.routes.js";
+import { healthRoutes } from "./routes/health.routes.js";
+import { errorMiddleware } from "./middleware/error.middleware.js";
+import { createCorsMiddleware } from "./middleware/cors.middleware.js";
 
 console.log("-----------------------------------------");
 console.log("🚀 BOOTING API SERVER");
-console.log("NODE_ENV:", process.env.NODE_ENV);
-console.log("PORT:", process.env.PORT);
-console.log("CWD:", process.cwd());
 console.log("-----------------------------------------");
 
 const app = new Hono();
 
 // ROOT HEALTH CHECK (Railway Liveness)
 app.get("/health", (c) => {
-  console.log("📥 [HEALTH] Root health check hit");
   return c.json({
     status: "ok",
     timestamp: new Date().toISOString(),
-    version: "1.0.1"
+    version: "1.0.2"
   });
 });
 
-// DELAYED LOAD: Mount other routes later to ensure health check is fast
-async function startServer() {
-  try {
-    const { createCorsMiddleware } = await import("./middleware/cors.middleware.js");
-    const { errorMiddleware } = await import("./middleware/error.middleware.js");
-    const { chatRoutes } = await import("./routes/chat.routes.js");
-    const { agentRoutes } = await import("./routes/agents.routes.js");
-    const { healthRoutes } = await import("./routes/health.routes.js");
-    const { logger: honoLogger } = await import("hono/logger");
+// API Sub-app
+const api = new Hono()
+  .use("*", createCorsMiddleware())
+  .use("*", honoLogger())
+  .use("*", errorMiddleware)
+  .route("/chat", chatRoutes)
+  .route("/agents", agentRoutes)
+  .route("/health", healthRoutes);
 
-    const api = new Hono();
-    api.use("*", createCorsMiddleware());
-    api.use("*", (honoLogger as any)());
-    api.use("*", errorMiddleware);
+// Mount everything under /api
+const routes = app.route("/api", api);
 
-    api.route("/chat", chatRoutes);
-    api.route("/agents", agentRoutes);
-    api.route("/health", healthRoutes);
+const port = parseInt(process.env.PORT || "3001", 10);
 
-    app.route("/api", api);
-
-    console.log("✅ All routes mounted");
-  } catch (err) {
-    console.error("❌ Error loading routes:", err);
-  }
-
-  const port = parseInt(process.env.PORT || "3001", 10);
-
+if (process.env.NODE_ENV !== "test") {
   try {
     serve({
       fetch: app.fetch,
       port,
       hostname: "0.0.0.0",
     }, (info) => {
-      console.log(`🚀 API server is listening on 0.0.0.0:${info.port}`);
+      console.log(`🚀 API server listening on 0.0.0.0:${info.port}`);
     });
   } catch (err) {
     console.error("❌ CRITICAL: Failed to start server listen:", err);
-    process.exit(1);
   }
 }
 
-startServer();
-
+export type AppType = typeof api;
 export default app;

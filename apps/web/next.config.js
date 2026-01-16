@@ -1,9 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    transpilePackages: ['@repo/api'],
-    experimental: {
-        typedRoutes: true,
-    },
+    transpilePackages: ['@repo/api', '@repo/database'],
+    typedRoutes: true,
 };
 
 export default nextConfig;
