@@ -50,6 +50,7 @@ serve(
   {
     fetch: app.fetch,
     port,
+    hostname: "0.0.0.0",
   },
   (info) => {
     serverLogger.info(
