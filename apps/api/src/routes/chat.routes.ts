@@ -15,63 +15,64 @@ import {
   UpdateConversationSchema,
 } from "../utils/validation.js";
 
-const chatRoutes = new Hono();
+const chatRoutes = new Hono()
+  .use("*", authMiddleware)
 
-// All chat routes require authentication
-chatRoutes.use("*", authMiddleware);
+  // POST /conversations - Create new conversation
+  .post(
+    "/conversations",
+    validateBody(CreateConversationSchema),
+    chatController.createConversation
+  )
 
-// POST /conversations - Create new conversation
-chatRoutes.post(
-  "/conversations",
-  validateBody(CreateConversationSchema),
-  chatController.createConversation
-);
+  // GET /conversations - List conversations
+  .get(
+    "/conversations",
+    validateQuery(PaginationSchema),
+    chatController.getConversations
+  )
 
-// GET /conversations - List user conversations
-chatRoutes.get(
-  "/conversations",
-  validateQuery(PaginationSchema),
-  chatController.getConversations
-);
+  // GET /conversations/:id - Get conversation details
+  .get(
+    "/conversations/:id",
+    validateParams(ConversationIdSchema),
+    chatController.getConversation
+  )
 
-// GET /conversations/:id - Get conversation details
-chatRoutes.get(
-  "/conversations/:id",
-  validateParams(ConversationIdSchema),
-  chatController.getConversation
-);
+  // PATCH /conversations/:id - Update conversation (e.g., title)
+  .patch(
+    "/conversations/:id",
+    validateParams(ConversationIdSchema),
+    validateBody(UpdateConversationSchema),
+    chatController.updateConversation
+  )
 
-// GET /conversations/:id/messages - Get messages
-chatRoutes.get(
-  "/conversations/:id/messages",
-  validateParams(ConversationIdSchema),
-  validateQuery(PaginationSchema),
-  chatController.getMessages
-);
+  // POST /conversations/:id/messages - Send message
+  .post(
+    "/conversations/:id/messages",
+    validateParams(ConversationIdSchema),
+    validateBody(SendMessageSchema),
+    rateLimitMiddleware({
+      prefix: "chat-messages",
+      limit: 10,
+      window: "1m",
+    }),
+    chatController.sendMessage
+  )
 
-// POST /conversations/:id/messages - Send message (streaming)
-// Add rate limiting to message sending
-chatRoutes.post(
-  "/conversations/:id/messages",
-  rateLimitMiddleware,
-  validateParams(ConversationIdSchema),
-  validateBody(SendMessageSchema),
-  chatController.sendMessage
-);
+  // GET /conversations/:id/messages - Get messages
+  .get(
+    "/conversations/:id/messages",
+    validateParams(ConversationIdSchema),
+    validateQuery(PaginationSchema),
+    chatController.getMessages
+  )
 
-// PATCH /conversations/:id - Update conversation
-chatRoutes.patch(
-  "/conversations/:id",
-  validateParams(ConversationIdSchema),
-  validateBody(UpdateConversationSchema),
-  chatController.updateConversation
-);
-
-// DELETE /conversations/:id - Delete conversation
-chatRoutes.delete(
-  "/conversations/:id",
-  validateParams(ConversationIdSchema),
-  chatController.deleteConversation
-);
+  // DELETE /conversations/:id - Delete conversation
+  .delete(
+    "/conversations/:id",
+    validateParams(ConversationIdSchema),
+    chatController.deleteConversation
+  );
 
 export { chatRoutes };

@@ -3,16 +3,15 @@ import { agentsController } from "../controllers/agents.controller.js";
 import { validateParams } from "../middleware/validation.middleware.js";
 import { AgentTypeSchema } from "../utils/validation.js";
 
-const agentRoutes = new Hono();
+const agentRoutes = new Hono()
+  // GET /agents - List all agents
+  .get("/", agentsController.getAgents)
 
-// GET /agents - List all agents
-agentRoutes.get("/", agentsController.getAgents);
-
-// GET /agents/:type/capabilities - Get agent capabilities
-agentRoutes.get(
-  "/:type/capabilities",
-  validateParams(AgentTypeSchema),
-  agentsController.getAgentCapabilities
-);
+  // GET /agents/:type/capabilities - Get agent capabilities
+  .get(
+    "/:type/capabilities",
+    validateParams(AgentTypeSchema),
+    agentsController.getAgentCapabilities
+  );
 
 export { agentRoutes };

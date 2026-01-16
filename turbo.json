@@ -10,7 +10,8 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         ".env*",
-        "GROQ_API_KEY"
+        "GROQ_API_KEY",
+        "VERCEL_URL"
       ],
       "outputs": [
         ".next/**",
