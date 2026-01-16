@@ -1,3 +1,4 @@
+/// <reference types="undici-types" />
 import { Hono } from "hono";
 import { prisma } from "@repo/database";
 import { checkRedisHealth } from "../lib/redis.js";

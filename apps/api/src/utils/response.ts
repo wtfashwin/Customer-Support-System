@@ -1,3 +1,4 @@
+/// <reference types="undici-types" />
 import type { Context } from "hono";
 import type { PaginatedResponse } from "../types/index.js";
 

@@ -1,3 +1,4 @@
+/// <reference types="undici-types" />
 import type { Context } from "hono";
 import type { AgentType } from "@repo/database";
 import { agentService } from "../services/agent.service.js";

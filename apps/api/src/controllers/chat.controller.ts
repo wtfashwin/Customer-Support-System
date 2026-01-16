@@ -1,3 +1,4 @@
+/// <reference types="undici-types" />
 import type { Context } from "hono";
 import { chatService } from "../services/chat.service.js";
 import { getCurrentUser } from "../middleware/auth.middleware.js";
