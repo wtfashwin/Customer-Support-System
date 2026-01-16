@@ -1,0 +1,156 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for customer support
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  name          String?
+  conversations Conversation[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+// Conversation thread for support sessions
+model Conversation {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String    @default("New Conversation")
+  messages  Message[]
+  metadata  Json?     // Store agent routing info, context summary
+  status    ConversationStatus @default(active)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId, createdAt])
+}
+
+enum ConversationStatus {
+  active
+  resolved
+  archived
+}
+
+// Individual messages within conversations
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           MessageRole
+  content        String       @db.Text
+  agentType      AgentType?   // Which agent handled this
+  toolCalls      Json?        // Store tool invocations
+  reasoning      String?      @db.Text // AI reasoning for transparency
+  tokensUsed     Int?
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId, createdAt])
+}
+
+enum MessageRole {
+  user
+  assistant
+  system
+}
+
+enum AgentType {
+  router
+  support
+  order
+  billing
+}
+
+// Mock Order data for demo
+model Order {
+  id           String      @id @default(cuid())
+  userId       String
+  orderNumber  String      @unique
+  status       OrderStatus
+  items        Json        // Array of order items
+  totalAmount  Decimal     @db.Decimal(10, 2)
+  trackingId   String?
+  carrier      String?
+  deliveryDate DateTime?
+  shippingAddress Json?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([userId, orderNumber])
+  @@index([trackingId])
+}
+
+enum OrderStatus {
+  pending
+  processing
+  shipped
+  out_for_delivery
+  delivered
+  cancelled
+  returned
+}
+
+// Mock Payment/Invoice data
+model Payment {
+  id            String        @id @default(cuid())
+  userId        String
+  orderId       String?
+  invoiceNumber String        @unique
+  amount        Decimal       @db.Decimal(10, 2)
+  status        PaymentStatus
+  method        PaymentMethod
+  refundStatus  RefundStatus?
+  refundAmount  Decimal?      @db.Decimal(10, 2)
+  refundReason  String?
+  billingAddress Json?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([userId, invoiceNumber])
+  @@index([orderId])
+}
+
+enum PaymentStatus {
+  pending
+  completed
+  failed
+  refunded
+  partially_refunded
+}
+
+enum PaymentMethod {
+  credit_card
+  debit_card
+  paypal
+  bank_transfer
+  apple_pay
+  google_pay
+}
+
+enum RefundStatus {
+  pending
+  approved
+  rejected
+  processing
+  completed
+}
+
+// FAQ/Knowledge Base for support agent
+model KnowledgeBase {
+  id        String   @id @default(cuid())
+  category  String
+  question  String   @db.Text
+  answer    String   @db.Text
+  keywords  String[] // For search matching
+  priority  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+}

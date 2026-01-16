@@ -1,0 +1,27 @@
+version: 2
+
+services:
+  api:
+    build:
+      builder: NIXPACKS
+      buildCommand: pnpm install && pnpm --filter database db:generate && pnpm --filter=@repo/api build
+    deploy:
+      startCommand: pnpm --filter=@repo/api start
+      healthcheckPath: /api/health
+      healthcheckTimeout: 100
+      restartPolicyType: ON_FAILURE
+      restartPolicyMaxRetries: 10
+      env:
+        NODE_ENV: production
+  
+  web:
+    build:
+      builder: NIXPACKS
+      # Ensure database client is generated for type safety during build
+      buildCommand: pnpm install && pnpm --filter database db:generate && pnpm --filter=@repo/web build
+    deploy:
+      startCommand: pnpm --filter=@repo/web start
+      healthcheckPath: /
+      restartPolicyType: ON_FAILURE
+      env:
+        NODE_ENV: production
