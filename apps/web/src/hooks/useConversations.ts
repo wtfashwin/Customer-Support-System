@@ -15,10 +15,11 @@ export function useConversations() {
         setError(null);
 
         try {
-            const data = await chatApi.getConversations(userId);
-            // Update store with fetched conversations
-            // Note: In a real app, you'd want to merge rather than replace
-            data.conversations.forEach((conv: any) => {
+            const response = await chatApi.getConversations(userId);
+            // The backend returns { success: true, data: conversations[], pagination: ... }
+            const conversationsList = (response as any).data || [];
+
+            conversationsList.forEach((conv: any) => {
                 addConversation({
                     id: conv.id,
                     userId: conv.userId,
@@ -47,13 +48,18 @@ export function useConversations() {
             setError(null);
 
             try {
-                const data = await chatApi.createConversation(userId, title);
+                const response = await chatApi.createConversation(userId, title);
+                // The backend returns { success: true, data: { conversation } }
+                const conversationData = (response as any).data?.conversation || (response as any).conversation;
+
+                if (!conversationData) throw new Error("Conversation data missing");
+
                 const newConv = {
-                    id: data.conversation.id,
-                    userId: data.conversation.userId,
-                    title: data.conversation.title,
-                    createdAt: new Date(data.conversation.createdAt),
-                    updatedAt: new Date(data.conversation.updatedAt),
+                    id: conversationData.id,
+                    userId: conversationData.userId,
+                    title: conversationData.title,
+                    createdAt: new Date(conversationData.createdAt),
+                    updatedAt: new Date(conversationData.updatedAt),
                 };
                 addConversation(newConv);
                 return newConv;
@@ -74,8 +80,11 @@ export function useConversations() {
             setError(null);
 
             try {
-                const data = await chatApi.getMessages(conversationId);
-                const formattedMessages = data.messages.map((msg: any) => ({
+                const response = await chatApi.getMessages(conversationId);
+                // The backend returns { success: true, data: messages[], pagination: ... }
+                const messagesList = (response as any).data || [];
+
+                const formattedMessages = messagesList.map((msg: any) => ({
                     id: msg.id,
                     conversationId: msg.conversationId,
                     role: msg.role,

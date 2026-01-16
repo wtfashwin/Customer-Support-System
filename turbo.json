@@ -11,7 +11,8 @@
         "$TURBO_DEFAULT$",
         ".env*",
         "GROQ_API_KEY",
-        "VERCEL_URL"
+        "VERCEL_URL",
+        "VERCEL_GIT_COMMIT_SHA"
       ],
       "outputs": [
         ".next/**",

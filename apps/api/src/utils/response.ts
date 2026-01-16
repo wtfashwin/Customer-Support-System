@@ -2,8 +2,8 @@ import type { Context } from "hono";
 import type { PaginatedResponse } from "../types/index.js";
 
 // Success response helper
-export function successResponse<T>(c: Context, data: T, statusCode: 200 | 201 = 200): Response {
-  return c.json({ success: true, data }, statusCode);
+export function successResponse<T>(c: Context, data: T, statusCode: 200 | 201 = 200) {
+  return c.json({ success: true as const, data }, statusCode);
 }
 
 // Paginated response helper
@@ -11,7 +11,7 @@ export function paginatedResponse<T>(
   c: Context,
   data: T[],
   pagination: { page: number; limit: number; total: number }
-): Response {
+) {
   const response: PaginatedResponse<T> = {
     data,
     pagination: {
@@ -21,7 +21,7 @@ export function paginatedResponse<T>(
       totalPages: Math.ceil(pagination.total / pagination.limit),
     },
   };
-  return c.json({ success: true, ...response }, 200);
+  return c.json({ success: true as const, ...response }, 200);
 }
 
 // Stream event helpers for SSE
@@ -30,7 +30,7 @@ export function formatStreamEvent(type: string, data: unknown): string {
 }
 
 // Create SSE stream response
-export function createStreamResponse(c: Context, stream: ReadableStream): Response {
+export function createStreamResponse(c: Context, stream: ReadableStream) {
   return new Response(stream, {
     headers: {
       "Content-Type": "text/event-stream",
@@ -42,11 +42,11 @@ export function createStreamResponse(c: Context, stream: ReadableStream): Respon
 }
 
 // No content response (204)
-export function noContentResponse(c: Context): Response {
+export function noContentResponse(c: Context) {
   return c.body(null, 204);
 }
 
 // Accepted response (202) for async operations
-export function acceptedResponse<T>(c: Context, data: T): Response {
-  return c.json({ success: true, data }, 202);
+export function acceptedResponse<T>(c: Context, data: T) {
+  return c.json({ success: true as const, data }, 202);
 }

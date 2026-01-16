@@ -22,7 +22,7 @@ import {
 
 export const chatController = {
   // Create a new conversation
-  async createConversation(c: Context): Promise<Response> {
+  async createConversation(c: Context) {
     const user = getCurrentUser(c);
     const body = getValidatedBody<CreateConversationInput>(c);
 
@@ -43,11 +43,11 @@ export const chatController = {
       return createStreamResponse(c, stream);
     }
 
-    return successResponse(c, conversation, 201);
+    return successResponse(c, { conversation }, 201);
   },
 
   // Get user's conversations
-  async getConversations(c: Context): Promise<Response> {
+  async getConversations(c: Context) {
     const user = getCurrentUser(c);
     const query = getValidatedQuery<PaginationInput>(c);
 
@@ -60,17 +60,17 @@ export const chatController = {
   },
 
   // Get a specific conversation
-  async getConversation(c: Context): Promise<Response> {
+  async getConversation(c: Context) {
     const user = getCurrentUser(c);
     const params = getValidatedParams<ConversationIdInput>(c);
 
     const conversation = await chatService.getConversation(params.id, user.id);
 
-    return successResponse(c, conversation);
+    return successResponse(c, { conversation });
   },
 
   // Get messages in a conversation
-  async getMessages(c: Context): Promise<Response> {
+  async getMessages(c: Context) {
     const user = getCurrentUser(c);
     const params = getValidatedParams<ConversationIdInput>(c);
     const query = getValidatedQuery<PaginationInput>(c);
@@ -88,7 +88,7 @@ export const chatController = {
   },
 
   // Send a message (streaming response)
-  async sendMessage(c: Context): Promise<Response> {
+  async sendMessage(c: Context) {
     const user = getCurrentUser(c);
     const params = getValidatedParams<ConversationIdInput>(c);
     const body = getValidatedBody<SendMessageInput>(c);
@@ -103,7 +103,7 @@ export const chatController = {
   },
 
   // Update conversation
-  async updateConversation(c: Context): Promise<Response> {
+  async updateConversation(c: Context) {
     const user = getCurrentUser(c);
     const params = getValidatedParams<ConversationIdInput>(c);
     const body = getValidatedBody<UpdateConversationInput>(c);
@@ -114,11 +114,11 @@ export const chatController = {
       body
     );
 
-    return successResponse(c, conversation);
+    return successResponse(c, { conversation });
   },
 
   // Delete conversation
-  async deleteConversation(c: Context): Promise<Response> {
+  async deleteConversation(c: Context) {
     const user = getCurrentUser(c);
     const params = getValidatedParams<ConversationIdInput>(c);
 
