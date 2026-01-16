@@ -1,6 +1,6 @@
 export class AppError extends Error {
   constructor(
-    public message: string,
+    public override message: string,
     public statusCode: number = 500,
     public code: string = "INTERNAL_ERROR"
   ) {
@@ -28,7 +28,7 @@ export class ValidationError extends AppError {
     this.name = "ValidationError";
   }
 
-  toJSON() {
+  override toJSON() {
     return {
       error: {
         code: this.code,

@@ -89,18 +89,20 @@ export class StreamService {
           }
 
           // Wait for the full result to get usage and tool results
-          const finalResult = await result;
+          const [usage, steps, finalFullText] = await Promise.all([
+            result.usage,
+            result.steps,
+            result.text,
+          ]);
 
-          // Get token usage
-          if (finalResult.usage) {
-            tokensUsed = finalResult.usage.totalTokens || 0;
-          }
+          // Process token usage
+          tokensUsed = usage.totalTokens || 0;
 
           // Process tool calls from steps
-          if (finalResult.steps) {
-            for (const step of finalResult.steps) {
+          if (steps) {
+            for (const step of steps as any[]) {
               if (step.toolCalls) {
-                for (const tc of step.toolCalls) {
+                for (const tc of step.toolCalls as any[]) {
                   // Send tool call event
                   controller.enqueue(
                     encoder.encode(
@@ -122,11 +124,11 @@ export class StreamService {
               }
 
               if (step.toolResults) {
-                for (const tr of step.toolResults) {
+                for (const tr of step.toolResults as any[]) {
                   toolCalls.push({
                     toolName: tr.toolName,
                     input: tr.args,
-                    output: tr.result,
+                    output: tr.result as any,
                   });
 
                   controller.enqueue(
@@ -143,8 +145,8 @@ export class StreamService {
           }
 
           // If fullResponse is empty, get it from the final result
-          if (!fullResponse && finalResult.text) {
-            fullResponse = finalResult.text;
+          if (!fullResponse && finalFullText) {
+            fullResponse = finalFullText;
             // Send the text if we didn't stream it
             controller.enqueue(
               encoder.encode(formatStreamEvent("text", { text: fullResponse }))
@@ -158,7 +160,7 @@ export class StreamService {
               role: "assistant",
               content: fullResponse,
               agentType,
-              toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+              toolCalls: toolCalls.length > 0 ? (toolCalls as any) : undefined,
               reasoning,
               tokensUsed,
             },

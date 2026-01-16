@@ -22,7 +22,7 @@ import {
 
 export const chatController = {
   // Create a new conversation
-  async createConversation(c: Context) {
+  async createConversation(c: Context): Promise<Response> {
     const user = getCurrentUser(c);
     const body = getValidatedBody<CreateConversationInput>(c);
 
@@ -47,7 +47,7 @@ export const chatController = {
   },
 
   // Get user's conversations
-  async getConversations(c: Context) {
+  async getConversations(c: Context): Promise<Response> {
     const user = getCurrentUser(c);
     const query = getValidatedQuery<PaginationInput>(c);
 
@@ -60,7 +60,7 @@ export const chatController = {
   },
 
   // Get a specific conversation
-  async getConversation(c: Context) {
+  async getConversation(c: Context): Promise<Response> {
     const user = getCurrentUser(c);
     const params = getValidatedParams<ConversationIdInput>(c);
 
@@ -70,7 +70,7 @@ export const chatController = {
   },
 
   // Get messages in a conversation
-  async getMessages(c: Context) {
+  async getMessages(c: Context): Promise<Response> {
     const user = getCurrentUser(c);
     const params = getValidatedParams<ConversationIdInput>(c);
     const query = getValidatedQuery<PaginationInput>(c);
@@ -88,7 +88,7 @@ export const chatController = {
   },
 
   // Send a message (streaming response)
-  async sendMessage(c: Context) {
+  async sendMessage(c: Context): Promise<Response> {
     const user = getCurrentUser(c);
     const params = getValidatedParams<ConversationIdInput>(c);
     const body = getValidatedBody<SendMessageInput>(c);
@@ -103,7 +103,7 @@ export const chatController = {
   },
 
   // Update conversation
-  async updateConversation(c: Context) {
+  async updateConversation(c: Context): Promise<Response> {
     const user = getCurrentUser(c);
     const params = getValidatedParams<ConversationIdInput>(c);
     const body = getValidatedBody<UpdateConversationInput>(c);
@@ -118,7 +118,7 @@ export const chatController = {
   },
 
   // Delete conversation
-  async deleteConversation(c: Context) {
+  async deleteConversation(c: Context): Promise<Response> {
     const user = getCurrentUser(c);
     const params = getValidatedParams<ConversationIdInput>(c);
 

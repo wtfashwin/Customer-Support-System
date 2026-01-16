@@ -2,7 +2,7 @@ import type { Context } from "hono";
 import type { PaginatedResponse } from "../types/index.js";
 
 // Success response helper
-export function successResponse<T>(c: Context, data: T, statusCode: 200 | 201 = 200) {
+export function successResponse<T>(c: Context, data: T, statusCode: 200 | 201 = 200): Response {
   return c.json({ success: true, data }, statusCode);
 }
 
@@ -30,7 +30,7 @@ export function formatStreamEvent(type: string, data: unknown): string {
 }
 
 // Create SSE stream response
-export function createStreamResponse(c: Context, stream: ReadableStream) {
+export function createStreamResponse(c: Context, stream: ReadableStream): Response {
   return new Response(stream, {
     headers: {
       "Content-Type": "text/event-stream",
@@ -42,11 +42,11 @@ export function createStreamResponse(c: Context, stream: ReadableStream) {
 }
 
 // No content response (204)
-export function noContentResponse(c: Context) {
+export function noContentResponse(c: Context): Response {
   return c.body(null, 204);
 }
 
 // Accepted response (202) for async operations
-export function acceptedResponse<T>(c: Context, data: T) {
+export function acceptedResponse<T>(c: Context, data: T): Response {
   return c.json({ success: true, data }, 202);
 }

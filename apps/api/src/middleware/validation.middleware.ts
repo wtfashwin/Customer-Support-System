@@ -1,9 +1,9 @@
 import type { Context, Next } from "hono";
-import type { ZodSchema, ZodError } from "zod";
+import type { ZodType, ZodError } from "zod";
 import { ValidationError } from "../lib/errors.js";
 
 // Validation middleware factory for JSON body
-export function validateBody<T>(schema: ZodSchema<T>) {
+export function validateBody<T>(schema: ZodType<T, any, any>) {
   return async (c: Context, next: Next) => {
     try {
       const body = await c.req.json();
@@ -25,7 +25,7 @@ export function validateBody<T>(schema: ZodSchema<T>) {
 }
 
 // Validation middleware factory for query parameters
-export function validateQuery<T>(schema: ZodSchema<T>) {
+export function validateQuery<T>(schema: ZodType<T, any, any>) {
   return async (c: Context, next: Next) => {
     try {
       const query = c.req.query();
@@ -47,7 +47,7 @@ export function validateQuery<T>(schema: ZodSchema<T>) {
 }
 
 // Validation middleware factory for URL parameters
-export function validateParams<T>(schema: ZodSchema<T>) {
+export function validateParams<T>(schema: ZodType<T, any, any>) {
   return async (c: Context, next: Next) => {
     try {
       const params = c.req.param();

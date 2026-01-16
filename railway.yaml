@@ -4,9 +4,9 @@ services:
   api:
     build:
       builder: NIXPACKS
-      buildCommand: pnpm install && pnpm --filter database db:generate && pnpm --filter=@repo/api build
+      buildCommand: pnpm install && pnpm --filter database db:generate && pnpm --filter @repo/api build
     deploy:
-      startCommand: pnpm --filter=@repo/api start
+      startCommand: pnpm --filter @repo/api start
       healthcheckPath: /api/health
       healthcheckTimeout: 100
       restartPolicyType: ON_FAILURE
@@ -18,9 +18,9 @@ services:
     build:
       builder: NIXPACKS
       # Ensure database client is generated for type safety during build
-      buildCommand: pnpm install && pnpm --filter database db:generate && pnpm --filter=@repo/web build
+      buildCommand: pnpm install && pnpm --filter database db:generate && pnpm --filter @repo/web build
     deploy:
-      startCommand: pnpm --filter=@repo/web start
+      startCommand: pnpm --filter @repo/web start
       healthcheckPath: /
       restartPolicyType: ON_FAILURE
       env:
