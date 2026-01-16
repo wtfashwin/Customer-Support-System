@@ -1,85 +1,68 @@
 import "dotenv/config";
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
-import { logger as honoLogger } from "hono/logger";
-import { chatRoutes } from "./routes/chat.routes.js";
-import { agentRoutes } from "./routes/agents.routes.js";
-import { healthRoutes } from "./routes/health.routes.js";
-import { errorMiddleware } from "./middleware/error.middleware.js";
-import { createCorsMiddleware } from "./middleware/cors.middleware.js";
-import { logger, createServiceLogger } from "./lib/logger.js";
 
-const serverLogger = createServiceLogger("server");
+console.log("-----------------------------------------");
+console.log("🚀 BOOTING API SERVER");
+console.log("NODE_ENV:", process.env.NODE_ENV);
+console.log("PORT:", process.env.PORT);
+console.log("CWD:", process.cwd());
+console.log("-----------------------------------------");
 
-console.log("🚀 Starting API server initialization...");
-
-// Main app for health checks and top-level middleware
 const app = new Hono();
 
-// BASIC HEALTH CHECK - MUST BE FIRST
+// ROOT HEALTH CHECK (Railway Liveness)
 app.get("/health", (c) => {
-  console.log("📥 Health check hit");
+  console.log("📥 [HEALTH] Root health check hit");
   return c.json({
     status: "ok",
     timestamp: new Date().toISOString(),
-    service: "api"
+    version: "1.0.1"
   });
 });
 
-// API Sub-app
-const api = new Hono();
+// DELAYED LOAD: Mount other routes later to ensure health check is fast
+async function startServer() {
+  try {
+    const { createCorsMiddleware } = await import("./middleware/cors.middleware.js");
+    const { errorMiddleware } = await import("./middleware/error.middleware.js");
+    const { chatRoutes } = await import("./routes/chat.routes.js");
+    const { agentRoutes } = await import("./routes/agents.routes.js");
+    const { healthRoutes } = await import("./routes/health.routes.js");
+    const { logger: honoLogger } = await import("hono/logger");
 
-// Global middleware for API
-api.use("*", createCorsMiddleware());
-api.use("*", honoLogger());
-api.use("*", errorMiddleware);
+    const api = new Hono();
+    api.use("*", createCorsMiddleware());
+    api.use("*", (honoLogger as any)());
+    api.use("*", errorMiddleware);
 
-// Mount API routes
-api.route("/chat", chatRoutes);
-api.route("/agents", agentRoutes);
-api.route("/health", healthRoutes);
+    api.route("/chat", chatRoutes);
+    api.route("/agents", agentRoutes);
+    api.route("/health", healthRoutes);
 
-// Mount everything under /api
-app.route("/api", api);
+    app.route("/api", api);
 
-// Start server
-const port = parseInt(process.env.PORT || "3001", 10);
+    console.log("✅ All routes mounted");
+  } catch (err) {
+    console.error("❌ Error loading routes:", err);
+  }
 
-serverLogger.info({ port, env: process.env.NODE_ENV }, "Starting server...");
+  const port = parseInt(process.env.PORT || "3001", 10);
 
-try {
-  serve(
-    {
+  try {
+    serve({
       fetch: app.fetch,
       port,
       hostname: "0.0.0.0",
-    },
-    (info: any) => {
-      serverLogger.info(
-        {
-          port: info.port,
-          address: info.address,
-        },
-        "Server started successfully"
-      );
-      console.log(`✅ API server listening on 0.0.0.0:${info.port}`);
-      console.log(`🚀 API server running at http://localhost:${info.port}/api`);
-      console.log(`📚 Health check: http://localhost:${info.port}/health`);
-    }
-  );
-} catch (err) {
-  console.error("❌ FAILED TO START SERVER:", err);
-  process.exit(1);
+    }, (info) => {
+      console.log(`🚀 API server is listening on 0.0.0.0:${info.port}`);
+    });
+  } catch (err) {
+    console.error("❌ CRITICAL: Failed to start server listen:", err);
+    process.exit(1);
+  }
 }
 
-// Graceful shutdown
-const shutdown = async (signal: string) => {
-  serverLogger.info({ signal }, "Received shutdown signal");
-  process.exit(0);
-};
+startServer();
 
-process.on("SIGTERM", () => shutdown("SIGTERM"));
-process.on("SIGINT", () => shutdown("SIGINT"));
-
-export type AppType = typeof api;
 export default app;

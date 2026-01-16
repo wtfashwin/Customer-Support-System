@@ -1,9 +1,9 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "pnpm install && pnpm turbo build --filter @repo/api"
+buildCommand = "pnpm turbo build --filter @repo/api"
 
 [deploy]
-startCommand = "node apps/api/dist/index.js"
+startCommand = "pnpm --filter @repo/api start"
 healthcheckPath = "/health"
 healthcheckTimeout = 180
-restartPolicyType = "ON_FAILURE"
+restartPolicyType = "ALWAYS"

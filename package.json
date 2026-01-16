@@ -30,7 +30,8 @@
       "typescript",
       "@prisma/client",
       "@prisma/engines",
-      "prisma"
+      "prisma",
+      "esbuild"
     ]
   }
 }
