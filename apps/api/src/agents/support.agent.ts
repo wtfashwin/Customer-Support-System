@@ -73,7 +73,7 @@ Remember: Your goal is to resolve issues efficiently while ensuring customer sat
 
         return {
           found: articles.length,
-          articles: articles.map((a) => ({
+          articles: articles.map((a: any) => ({
             category: a.category,
             question: a.question,
             answer: a.answer,
@@ -99,11 +99,11 @@ Remember: Your goal is to resolve issues efficiently while ensuring customer sat
           where: { id: userId },
           include: includeOrders
             ? {
-                conversations: {
-                  take: 1,
-                  orderBy: { createdAt: "desc" },
-                },
-              }
+              conversations: {
+                take: 1,
+                orderBy: { createdAt: "desc" },
+              },
+            }
             : undefined,
         });
 

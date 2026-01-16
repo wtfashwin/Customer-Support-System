@@ -65,16 +65,16 @@ Remember: Handle financial information with care. Refunds require verification o
 
         const summary = {
           totalPayments: payments.length,
-          completed: payments.filter((p) => p.status === "completed").length,
-          pending: payments.filter((p) => p.status === "pending").length,
+          completed: payments.filter((p: any) => p.status === "completed").length,
+          pending: payments.filter((p: any) => p.status === "pending").length,
           refunded: payments.filter(
-            (p) => p.status === "refunded" || p.status === "partially_refunded"
+            (p: any) => p.status === "refunded" || p.status === "partially_refunded"
           ).length,
         };
 
         return {
           summary,
-          payments: payments.map((p) => ({
+          payments: payments.map((p: any) => ({
             invoiceNumber: p.invoiceNumber,
             amount: p.amount.toString(),
             status: p.status,
@@ -149,10 +149,10 @@ Remember: Handle financial information with care. Refunds require verification o
           order: orderInfo,
           refund: payment.refundStatus
             ? {
-                status: payment.refundStatus,
-                amount: payment.refundAmount?.toString(),
-                reason: payment.refundReason,
-              }
+              status: payment.refundStatus,
+              amount: payment.refundAmount?.toString(),
+              reason: payment.refundReason,
+            }
             : null,
           canRefund: payment.status === "completed" && !payment.refundStatus,
         };

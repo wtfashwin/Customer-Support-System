@@ -8,11 +8,11 @@
     "dev": "turbo dev",
     "lint": "turbo lint",
     "test": "turbo test",
-    "db:generate": "pnpm --filter database db:generate",
-    "db:push": "pnpm --filter database db:push",
-    "db:migrate": "pnpm --filter database db:migrate",
-    "db:seed": "pnpm --filter database db:seed",
-    "db:studio": "pnpm --filter database db:studio",
+    "db:generate": "pnpm --filter @repo/database db:generate",
+    "db:push": "pnpm --filter @repo/database db:push",
+    "db:migrate": "pnpm --filter @repo/database db:migrate",
+    "db:seed": "pnpm --filter @repo/database db:seed",
+    "db:studio": "pnpm --filter @repo/database db:studio",
     "clean": "turbo clean && rm -rf node_modules"
   },
   "devDependencies": {

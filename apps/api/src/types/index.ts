@@ -42,8 +42,8 @@ export interface ExtractedEntities {
 export interface AgentTool {
   name: string;
   description: string;
-  parameters: Record<string, unknown>;
-  execute: (params: Record<string, unknown>, userId: string) => Promise<unknown>;
+  parameters: Record<string, { type: string; description: string }>;
+  execute: (params: any, userId: string) => Promise<unknown>;
 }
 
 // Tool call result

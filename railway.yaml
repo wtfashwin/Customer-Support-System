@@ -4,7 +4,7 @@ services:
   api:
     build:
       builder: NIXPACKS
-      buildCommand: pnpm install && pnpm --filter database db:generate && pnpm --filter @repo/api build
+      buildCommand: pnpm install && pnpm turbo build --filter @repo/api
     deploy:
       startCommand: pnpm --filter @repo/api start
       healthcheckPath: /api/health
@@ -17,8 +17,7 @@ services:
   web:
     build:
       builder: NIXPACKS
-      # Ensure database client is generated for type safety during build
-      buildCommand: pnpm install && pnpm --filter database db:generate && pnpm --filter @repo/web build
+      buildCommand: pnpm install && pnpm turbo build --filter @repo/web
     deploy:
       startCommand: pnpm --filter @repo/web start
       healthcheckPath: /

@@ -116,7 +116,7 @@ export abstract class BaseAgent {
           properties: agentTool.parameters,
           required: Object.keys(agentTool.parameters).filter(
             (key) =>
-              !agentTool.parameters[key].description
+              !agentTool.parameters[key]!.description
                 .toLowerCase()
                 .includes("optional")
           ),
@@ -138,7 +138,7 @@ export abstract class BaseAgent {
         properties: agentTool.parameters,
         required: Object.keys(agentTool.parameters).filter(
           (key) =>
-            !agentTool.parameters[key].description
+            !agentTool.parameters[key]!.description
               .toLowerCase()
               .includes("optional")
         ),
@@ -148,7 +148,7 @@ export abstract class BaseAgent {
 
   async executeTool(
     toolName: string,
-    input: Record<string, unknown>,
+    input: any,
     userId: string
   ): Promise<unknown> {
     const agentTool = this.tools.get(toolName);

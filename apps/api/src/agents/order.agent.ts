@@ -119,7 +119,7 @@ Remember: Orders can only be cancelled if they haven't shipped yet. Be transpare
 
         return {
           totalOrders: orders.length,
-          orders: orders.map((o) => ({
+          orders: orders.map((o: any) => ({
             orderNumber: o.orderNumber,
             status: o.status,
             totalAmount: o.totalAmount.toString(),
