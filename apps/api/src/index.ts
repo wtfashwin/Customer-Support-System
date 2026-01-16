@@ -11,13 +11,21 @@ import { logger, createServiceLogger } from "./lib/logger.js";
 
 const serverLogger = createServiceLogger("server");
 
+console.log("Starting API server initialization...");
+
 // Create Hono app
-const app = new Hono().basePath("/api");
+const app = new Hono();
+
+// Basic health check at root for Railway
+app.get("/health", (c) => c.json({ status: "ok", bootTime: new Date().toISOString() }));
 
 // Global middleware
 app.use("*", createCorsMiddleware());
 app.use("*", honoLogger());
 app.use("*", errorMiddleware);
+
+// Mount routes under /api
+app.basePath("/api");
 
 // Mount routes
 const routes = app
