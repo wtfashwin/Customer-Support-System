@@ -11,30 +11,40 @@ import { logger, createServiceLogger } from "./lib/logger.js";
 
 const serverLogger = createServiceLogger("server");
 
-console.log("Starting API server initialization...");
+console.log("🚀 Starting API server initialization...");
 
-// Create Hono app
+// Main app for health checks and top-level middleware
 const app = new Hono();
 
-// Basic health check at root for Railway
-app.get("/health", (c) => c.json({ status: "ok", bootTime: new Date().toISOString() }));
+// Basic health check at root for Railway liveness probes
+app.get("/health", (c) => {
+  return c.json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    service: "api",
+    env: process.env.NODE_ENV
+  });
+});
 
-// Global middleware
-app.use("*", createCorsMiddleware());
-app.use("*", honoLogger());
-app.use("*", errorMiddleware);
+// API Sub-app
+const api = new Hono();
 
-// Mount routes under /api
-app.basePath("/api");
+// Global middleware for API
+api.use("*", createCorsMiddleware());
+api.use("*", honoLogger());
+api.use("*", errorMiddleware);
 
-// Mount routes
-const routes = app
-  .route("/chat", chatRoutes)
-  .route("/agents", agentRoutes)
-  .route("/health", healthRoutes);
+// Mount API routes
+api.route("/chat", chatRoutes);
+api.route("/agents", agentRoutes);
+api.route("/health", healthRoutes);
 
-// 404 handler
+// Mount everything under /api
+app.route("/api", api);
+
+// 404 handler for any other route
 app.notFound((c) => {
+  serverLogger.warn({ method: c.req.method, path: c.req.path }, "Route not found");
   return c.json(
     {
       error: {
@@ -46,11 +56,12 @@ app.notFound((c) => {
   );
 });
 
-// Export type for Hono RPC (frontend type safety)
-export type AppType = typeof routes;
-
 // Start server
 const port = parseInt(process.env.PORT || "3001", 10);
+const host = "0.0.0.0";
+
+// Export type for Hono RPC
+export type AppType = typeof api;
 
 serverLogger.info({ port, env: process.env.NODE_ENV }, "Starting server...");
 
