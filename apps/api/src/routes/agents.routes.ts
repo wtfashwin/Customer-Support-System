@@ -1,6 +1,7 @@
+/// <reference types="undici-types" />
 import { Hono } from "hono";
+import { zValidator } from "@hono/zod-validator";
 import { agentsController } from "../controllers/agents.controller.js";
-import { validateParams } from "../middleware/validation.middleware.js";
 import { AgentTypeSchema } from "../utils/validation.js";
 
 const agentRoutes = new Hono()
@@ -10,7 +11,7 @@ const agentRoutes = new Hono()
   // GET /agents/:type/capabilities - Get agent capabilities
   .get(
     "/:type/capabilities",
-    validateParams(AgentTypeSchema),
+    zValidator("param", AgentTypeSchema),
     agentsController.getAgentCapabilities
   );
 

@@ -9,7 +9,7 @@ export const apiClient = hc<AppType>(apiUrl);
 export const chatApi = {
     async createConversation(userId: string, title?: string) {
         const res = await apiClient.chat.conversations.$post({
-            json: { userId, title },
+            json: { title },
         });
         if (!res.ok) throw new Error("Failed to create conversation");
         return res.json();
@@ -18,7 +18,7 @@ export const chatApi = {
     async sendMessage(conversationId: string, message: string, userId: string) {
         const res = await apiClient.chat.conversations[":id"].messages.$post({
             param: { id: conversationId },
-            json: { message, userId },
+            json: { content: message },
         });
         if (!res.ok) throw new Error("Failed to send message");
         return res.body; // Returns ReadableStream
@@ -26,7 +26,7 @@ export const chatApi = {
 
     async getConversations(userId: string, page = 1, limit = 20) {
         const res = await apiClient.chat.conversations.$get({
-            query: { userId, page: String(page), limit: String(limit) },
+            query: { page: String(page), limit: String(limit) },
         });
         if (!res.ok) throw new Error("Failed to fetch conversations");
         return res.json();

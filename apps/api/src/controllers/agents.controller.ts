@@ -2,14 +2,12 @@
 import type { Context } from "hono";
 import type { AgentType } from "@repo/database";
 import { agentService } from "../services/agent.service.js";
-import { getValidatedParams } from "../middleware/validation.middleware.js";
-import type { AgentTypeInput } from "../utils/validation.js";
 import { successResponse } from "../utils/response.js";
 import { NotFoundError } from "../lib/errors.js";
 
 export const agentsController = {
   // Get list of all available agents
-  async getAgents(c: Context) {
+  async getAgents(c: any) {
     const agents = agentService.getAllAgents();
 
     const agentList = agents.map(({ type, agent }) => ({
@@ -26,8 +24,8 @@ export const agentsController = {
   },
 
   // Get capabilities of a specific agent
-  async getAgentCapabilities(c: Context) {
-    const params = getValidatedParams<AgentTypeInput>(c);
+  async getAgentCapabilities(c: any) {
+    const params = c.req.valid("param");
     const agent = agentService.getAgent(params.type as AgentType);
 
     if (!agent) {

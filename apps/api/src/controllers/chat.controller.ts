@@ -3,18 +3,6 @@ import type { Context } from "hono";
 import { chatService } from "../services/chat.service.js";
 import { getCurrentUser } from "../middleware/auth.middleware.js";
 import {
-  getValidatedBody,
-  getValidatedQuery,
-  getValidatedParams,
-} from "../middleware/validation.middleware.js";
-import type {
-  SendMessageInput,
-  CreateConversationInput,
-  PaginationInput,
-  ConversationIdInput,
-  UpdateConversationInput,
-} from "../utils/validation.js";
-import {
   successResponse,
   paginatedResponse,
   createStreamResponse,
@@ -23,9 +11,9 @@ import {
 
 export const chatController = {
   // Create a new conversation
-  async createConversation(c: Context) {
+  async createConversation(c: any) {
     const user = getCurrentUser(c);
-    const body = getValidatedBody<CreateConversationInput>(c);
+    const body = c.req.valid("json");
 
     const conversation = await chatService.createConversation(
       user.id,
@@ -48,22 +36,22 @@ export const chatController = {
   },
 
   // Get user's conversations
-  async getConversations(c: Context) {
+  async getConversations(c: any) {
     const user = getCurrentUser(c);
-    const query = getValidatedQuery<PaginationInput>(c);
+    const query = c.req.valid("query");
 
     const result = await chatService.getUserConversations(user.id, {
-      page: query?.page || 1,
-      limit: query?.limit || 20,
+      page: Number(query?.page) || 1,
+      limit: Number(query?.limit) || 20,
     });
 
     return paginatedResponse(c, result.data, result.pagination);
   },
 
   // Get a specific conversation
-  async getConversation(c: Context) {
+  async getConversation(c: any) {
     const user = getCurrentUser(c);
-    const params = getValidatedParams<ConversationIdInput>(c);
+    const params = c.req.valid("param");
 
     const conversation = await chatService.getConversation(params.id, user.id);
 
@@ -71,17 +59,17 @@ export const chatController = {
   },
 
   // Get messages in a conversation
-  async getMessages(c: Context) {
+  async getMessages(c: any) {
     const user = getCurrentUser(c);
-    const params = getValidatedParams<ConversationIdInput>(c);
-    const query = getValidatedQuery<PaginationInput>(c);
+    const params = c.req.valid("param");
+    const query = c.req.valid("query");
 
     const result = await chatService.getConversationMessages(
       params.id,
       user.id,
       {
-        page: query?.page || 1,
-        limit: query?.limit || 50,
+        page: Number(query?.page) || 1,
+        limit: Number(query?.limit) || 50,
       }
     );
 
@@ -89,10 +77,10 @@ export const chatController = {
   },
 
   // Send a message (streaming response)
-  async sendMessage(c: Context) {
+  async sendMessage(c: any) {
     const user = getCurrentUser(c);
-    const params = getValidatedParams<ConversationIdInput>(c);
-    const body = getValidatedBody<SendMessageInput>(c);
+    const params = c.req.valid("param");
+    const body = c.req.valid("json");
 
     const stream = await chatService.sendMessage(
       params.id,
@@ -104,10 +92,10 @@ export const chatController = {
   },
 
   // Update conversation
-  async updateConversation(c: Context) {
+  async updateConversation(c: any) {
     const user = getCurrentUser(c);
-    const params = getValidatedParams<ConversationIdInput>(c);
-    const body = getValidatedBody<UpdateConversationInput>(c);
+    const params = c.req.valid("param");
+    const body = c.req.valid("json");
 
     const conversation = await chatService.updateConversation(
       params.id,
@@ -119,9 +107,9 @@ export const chatController = {
   },
 
   // Delete conversation
-  async deleteConversation(c: Context) {
+  async deleteConversation(c: any) {
     const user = getCurrentUser(c);
-    const params = getValidatedParams<ConversationIdInput>(c);
+    const params = c.req.valid("param");
 
     await chatService.deleteConversation(params.id, user.id);
 
