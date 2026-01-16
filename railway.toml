@@ -1,0 +1,9 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = "pnpm install && pnpm turbo build --filter @repo/api"
+
+[deploy]
+startCommand = "pnpm --filter @repo/api start"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
