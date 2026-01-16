@@ -52,11 +52,7 @@ const chatRoutes = new Hono()
     "/conversations/:id/messages",
     validateParams(ConversationIdSchema),
     validateBody(SendMessageSchema),
-    rateLimitMiddleware({
-      prefix: "chat-messages",
-      limit: 10,
-      window: "1m",
-    }),
+    rateLimitMiddleware,
     chatController.sendMessage
   )
 
