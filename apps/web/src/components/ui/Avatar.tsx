@@ -1,9 +1,10 @@
 import { HTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
+import { type AgentType } from "@repo/shared-types";
 
 export interface AvatarProps extends HTMLAttributes<HTMLDivElement> {
     variant?: "user" | "agent";
-    agentType?: string;
+    agentType?: AgentType | string;
     src?: string;
     alt?: string;
 }
@@ -20,9 +21,12 @@ export function Avatar({
 
     let bgColor = "bg-primary";
     if (variant === "agent") {
-        if (agentType === "support") bgColor = "bg-agent-support";
-        else if (agentType === "order") bgColor = "bg-agent-order";
-        else if (agentType === "billing") bgColor = "bg-agent-billing";
+        const agentColors: Record<string, string> = {
+            support: "bg-agent-support",
+            order: "bg-agent-order",
+            billing: "bg-agent-billing",
+        };
+        bgColor = (agentType && agentColors[agentType as string]) || "bg-primary-muted";
     }
 
     return (

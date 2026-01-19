@@ -1,12 +1,13 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { type AgentType } from "@repo/shared-types";
 
 export interface Message {
     id: string;
     conversationId: string;
     role: "user" | "assistant";
     content: string;
-    agentType?: string;
+    agentType?: AgentType;
     reasoning?: string;
     createdAt: Date;
     toolCalls?: ToolCall[];

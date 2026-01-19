@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AgentTypeSchema as SharedAgentTypeSchema } from "@repo/shared-types";
 
 // Send message schema
 export const SendMessageSchema = z.object({
@@ -45,11 +46,9 @@ export const ConversationIdSchema = z.object({
 
 export type ConversationIdInput = z.infer<typeof ConversationIdSchema>;
 
-// Agent type param schema
+// Agent type param schema - uses shared schema
 export const AgentTypeSchema = z.object({
-  type: z.enum(["support", "order", "billing"], {
-    errorMap: () => ({ message: "Invalid agent type. Must be: support, order, or billing" }),
-  }),
+  type: SharedAgentTypeSchema,
 });
 
 export type AgentTypeInput = z.infer<typeof AgentTypeSchema>;
@@ -61,3 +60,7 @@ export const UpdateConversationSchema = z.object({
 });
 
 export type UpdateConversationInput = z.infer<typeof UpdateConversationSchema>;
+
+// Re-export the shared agent type schema for convenience
+export { SharedAgentTypeSchema };
+export type { AgentType } from "@repo/shared-types";

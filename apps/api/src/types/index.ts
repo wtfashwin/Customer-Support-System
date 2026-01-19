@@ -1,5 +1,6 @@
 import type { Context } from "hono";
-import type { User, AgentType } from "@repo/database";
+import type { User } from "@repo/database";
+import type { AgentType } from "@repo/shared-types";
 
 // Hono context with user
 export interface AuthVariables {

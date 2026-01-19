@@ -1,39 +1,47 @@
 import { HTMLAttributes } from "react";
 import { cn, getAgentColor } from "@/lib/utils";
+import { type AgentType } from "@repo/shared-types";
 
-export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
+export interface BadgeProps {
+    children: React.ReactNode;
     variant?: "default" | "success" | "warning" | "error" | "agent";
-    agentType?: string;
+    agentType?: AgentType | string;
+    className?: string;
 }
 
-export function Badge({
-    className,
-    variant = "default",
-    agentType,
-    children,
-    ...props
-}: BadgeProps) {
-    let badgeStyles = "bg-background-tertiary text-foreground-secondary";
+export function Badge({ children, variant = "default", agentType, className }: BadgeProps) {
+    const variantStyles = {
+        default: "bg-foreground-muted/10 text-foreground-secondary border-foreground-muted/20",
+        success: "bg-success/10 text-success border-success/20",
+        warning: "bg-warning/10 text-warning border-warning/20",
+        error: "bg-error/10 text-error border-error/20",
+        agent: "border-transparent",
+    };
 
     if (variant === "agent" && agentType) {
         const colors = getAgentColor(agentType);
-        badgeStyles = cn(colors.bg, colors.text, colors.border, "border");
-    } else if (variant === "success") {
-        badgeStyles = "bg-success/10 text-success border border-success/20";
-    } else if (variant === "warning") {
-        badgeStyles = "bg-warning/10 text-warning border border-warning/20";
-    } else if (variant === "error") {
-        badgeStyles = "bg-error/10 text-error border border-error/20";
+        return (
+            <span
+                className={cn(
+                    "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors",
+                    colors.bg,
+                    colors.text,
+                    colors.border,
+                    className
+                )}
+            >
+                {children}
+            </span>
+        );
     }
 
     return (
         <span
             className={cn(
-                "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium",
-                badgeStyles,
+                "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors",
+                variantStyles[variant],
                 className
             )}
-            {...props}
         >
             {children}
         </span>

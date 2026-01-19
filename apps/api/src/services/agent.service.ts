@@ -1,6 +1,6 @@
 import { generateText, type CoreMessage } from "ai";
 import { createGroq } from "@ai-sdk/groq";
-import type { AgentType } from "@repo/database";
+import { type AgentType, parseAgentType } from "@repo/shared-types";
 import type { RoutingDecision, ChatMessage } from "../types/index.js";
 import { createServiceLogger } from "../lib/logger.js";
 import { streamService } from "./stream.service.js";
@@ -67,7 +67,17 @@ Respond with ONLY valid JSON in this exact format:
         throw new Error("No text response from router");
       }
 
-      const decision = JSON.parse(content) as RoutingDecision;
+      const decisionData = JSON.parse(content);
+
+      // Validate the agent type from the JSON
+      const validatedAgent = parseAgentType(decisionData.agent);
+
+      const decision: RoutingDecision = {
+        agent: validatedAgent || "support",
+        confidence: typeof decisionData.confidence === "number" ? decisionData.confidence : 0.5,
+        reasoning: decisionData.reasoning || "Default fallback",
+        entities: Array.isArray(decisionData.entities) ? decisionData.entities : [],
+      };
 
       logger.info(
         {
@@ -81,16 +91,18 @@ Respond with ONLY valid JSON in this exact format:
         "Message routed"
       );
 
-      // Fallback to support if confidence is low
-      if (decision.confidence < 0.6) {
+      // Fallback to support if confidence is low or invalid agent returned
+      if (decision.confidence < 0.6 || !validatedAgent) {
         logger.info(
-          { originalAgent: decision.agent, confidence: decision.confidence },
-          "Low confidence - defaulting to support agent"
+          { originalAgent: decisionData.agent, confidence: decision.confidence },
+          "Low confidence or invalid agent - defaulting to support agent"
         );
         return {
           ...decision,
           agent: "support",
-          reasoning: `Low confidence (${decision.confidence}) - defaulting to support agent. Original reasoning: ${decision.reasoning}`,
+          reasoning: !validatedAgent
+            ? `Invalid agent type returned: ${decisionData.agent}. Switching to support.`
+            : `Low confidence (${decision.confidence}) - defaulting to support agent. Original reasoning: ${decision.reasoning}`,
         };
       }
 

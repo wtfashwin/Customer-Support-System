@@ -1,5 +1,6 @@
 import { hc } from "hono/client";
 import type { AppType } from "@repo/api";
+import { type AgentType } from "@repo/shared-types";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 
@@ -65,7 +66,7 @@ export const agentsApi = {
         return res.json();
     },
 
-    async getAgentCapabilities(agentType: string) {
+    async getAgentCapabilities(agentType: AgentType) {
         const res = await apiClient.agents[":type"].capabilities.$get({
             param: { type: agentType },
         });
