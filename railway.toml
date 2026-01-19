@@ -3,7 +3,8 @@ builder = "NIXPACKS"
 buildCommand = "pnpm turbo build --filter @repo/api"
 
 [deploy]
-startCommand = "pnpm --filter @repo/api start"
+# Using a more direct start command to ensure process signals are handled correctly
+startCommand = "node apps/api/dist/index.js"
 healthcheckPath = "/health"
 healthcheckTimeout = 180
 restartPolicyType = "ALWAYS"
