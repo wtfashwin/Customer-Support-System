@@ -29,12 +29,15 @@ const app = new Hono();
 // ROOT HEALTH CHECK (Railway Liveness)
 // This is defined outside any middleware to be as fast as possible
 app.get("/health", (c) => {
-  return c.json({
-    status: "ok",
-    timestamp: new Date().toISOString(),
-    version: "1.0.3",
-    uptime: process.uptime()
-  });
+  return c.json(
+    {
+      status: "ok",
+      timestamp: new Date().toISOString(),
+      version: "1.0.3",
+      uptime: process.uptime()
+    },
+    200
+  );
 });
 
 // Root path redirect or info
@@ -60,6 +63,7 @@ const port = Number(process.env.PORT) || 3001;
 if (process.env.NODE_ENV !== "test") {
   (async () => {
     try {
+      console.log("Starting server initialization...");
       console.log(`📡 Preparing to listen on 0.0.0.0:${port}`);
 
       // Verify Prisma connection before starting server
