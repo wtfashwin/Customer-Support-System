@@ -23,6 +23,7 @@
     "devDependencies": {
         "@repo/typescript-config": "workspace:*",
         "@types/node": "^22.19.7",
+        "undici-types": "^6.20.0",
         "typescript": "^5.7.0"
     }
 }
