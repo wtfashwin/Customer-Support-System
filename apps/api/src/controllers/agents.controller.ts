@@ -1,6 +1,6 @@
 /// <reference types="undici-types" />
 import type { Context } from "hono";
-import type { AgentType } from "@repo/database";
+import type { AgentType } from "@repo/shared-types";
 import { agentService } from "../services/agent.service.js";
 import { successResponse } from "../utils/response.js";
 import { NotFoundError } from "../lib/errors.js";

@@ -29,6 +29,9 @@ importers:
       '@repo/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@repo/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared-types
       '@upstash/ratelimit':
         specifier: ^2.0.0
         version: 2.0.8(@upstash/redis@1.36.1)
@@ -84,6 +87,9 @@ importers:
       '@repo/api':
         specifier: workspace:*
         version: link:../api
+      '@repo/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared-types
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -173,6 +179,25 @@ importers:
       eslint-plugin-import:
         specifier: ^2.29.0
         version: 2.32.0(@typescript-eslint/parser@8.53.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)
+
+  packages/shared-types:
+    dependencies:
+      zod:
+        specifier: ^3.23.0
+        version: 3.25.76
+    devDependencies:
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      '@types/node':
+        specifier: ^22.19.7
+        version: 22.19.7
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      undici-types:
+        specifier: ^6.20.0
+        version: 6.21.0
 
   packages/typescript-config: {}
 

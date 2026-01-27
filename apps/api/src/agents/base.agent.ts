@@ -1,7 +1,7 @@
 import { tool, type CoreTool } from "ai";
 import { z } from "zod";
 import type { AgentTool, AgentCapabilities } from "../types/index.js";
-import type { AgentType } from "@repo/database";
+import type { AgentType } from "@repo/shared-types";
 import { createServiceLogger } from "../lib/logger.js";
 
 const logger = createServiceLogger("agent-base");
