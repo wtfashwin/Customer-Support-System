@@ -58,7 +58,7 @@ async def semantic_search(*, query: str, index: str, top_k: int = 5) -> list[dic
                         "metadata": {
                             k: v
                             for k, v in r.items()
-                            if not k.startswith("@search.") and k not in {"content"}
+                            if not k.startswith("@search.") and k not in {"content", "id"}
                         },
                     }
                 )
