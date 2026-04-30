@@ -80,4 +80,13 @@ def get_settings() -> Settings:
     return Settings()
 
 
-settings = get_settings()
+class _SettingsProxy:
+    """Module-level shim so callers can `from app.config import settings`
+    while still picking up env changes when `get_settings.cache_clear()` is
+    called (used in tests). Each attribute access goes through the lru_cache."""
+
+    def __getattr__(self, item: str):
+        return getattr(get_settings(), item)
+
+
+settings: Settings = _SettingsProxy()  # type: ignore[assignment]
