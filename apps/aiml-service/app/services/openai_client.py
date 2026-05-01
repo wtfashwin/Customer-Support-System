@@ -83,36 +83,52 @@ async def _retry_call(coro_factory):
 
 
 async def embed_texts(texts: list[str]) -> EmbedResult:
-    client = get_client()
+    """Embed a list of texts. Identical (model, texts) pairs are cached
+    in Redis with TTL = settings.cache_ttl_seconds, so back-to-back calls
+    with the same input do not hit OpenAI."""
+
+    from app.services.cache import get_or_set, make_key
+
     model = settings.openai_embed_model
-    started = time.perf_counter()
-    try:
-        response = await _retry_call(
-            lambda: client.embeddings.create(model=model, input=texts)
-        )
-    except _RETRYABLE as exc:
+    cache_key = make_key(model=model, payload={"op": "embed", "texts": texts})
+
+    async def _fetch() -> dict[str, Any]:
+        client = get_client()
+        started = time.perf_counter()
+        try:
+            response = await _retry_call(
+                lambda: client.embeddings.create(model=model, input=texts)
+            )
+        except _RETRYABLE as exc:
+            record_ai_call(
+                model=model,
+                prompt_hash=_hash_prompt({"texts": texts}),
+                tokens_in=0,
+                tokens_out=0,
+                latency_ms=int((time.perf_counter() - started) * 1000),
+                status="error",
+                error=str(exc),
+            )
+            raise UpstreamError(f"OpenAI embeddings failed: {exc}") from exc
+
+        vectors = [d.embedding for d in response.data]
+        tokens = getattr(response.usage, "total_tokens", 0) or 0
         record_ai_call(
             model=model,
             prompt_hash=_hash_prompt({"texts": texts}),
-            tokens_in=0,
+            tokens_in=tokens,
             tokens_out=0,
             latency_ms=int((time.perf_counter() - started) * 1000),
-            status="error",
-            error=str(exc),
+            status="ok",
         )
-        raise UpstreamError(f"OpenAI embeddings failed: {exc}") from exc
+        return {"vectors": vectors, "model": model, "tokens": tokens}
 
-    vectors = [d.embedding for d in response.data]
-    tokens = getattr(response.usage, "total_tokens", 0) or 0
-    record_ai_call(
-        model=model,
-        prompt_hash=_hash_prompt({"texts": texts}),
-        tokens_in=tokens,
-        tokens_out=0,
-        latency_ms=int((time.perf_counter() - started) * 1000),
-        status="ok",
+    payload, _hit = await get_or_set(cache_key, _fetch)
+    return EmbedResult(
+        vectors=payload["vectors"],
+        model=payload["model"],
+        tokens=payload["tokens"],
     )
-    return EmbedResult(vectors=vectors, model=model, tokens=tokens)
 
 
 async def chat_complete(

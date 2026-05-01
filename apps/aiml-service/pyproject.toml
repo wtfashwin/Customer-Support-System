@@ -53,6 +53,8 @@ dev = [
     "types-redis>=4.6.0",
     "testcontainers[postgres]>=4.8.2",
     "freezegun>=1.5.1",
+    "fakeredis>=2.35.1",
+    "aiosqlite>=0.22.1",
 ]
 
 [build-system]
