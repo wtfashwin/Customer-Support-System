@@ -6,6 +6,7 @@ import { prisma } from "@repo/database";
 import { chatRoutes } from "./routes/chat.routes.js";
 import { agentRoutes } from "./routes/agents.routes.js";
 import { healthRoutes } from "./routes/health.routes.js";
+import { ragRoutes } from "./routes/rag.routes.js";
 import { errorMiddleware } from "./middleware/error.middleware.js";
 import { createCorsMiddleware } from "./middleware/cors.middleware.js";
 
@@ -52,6 +53,7 @@ const api = new Hono()
   .use("*", errorMiddleware)
   .route("/chat", chatRoutes)
   .route("/agents", agentRoutes)
+  .route("/rag", ragRoutes)
   .route("/health", healthRoutes);
 
 // Mount everything under /api
