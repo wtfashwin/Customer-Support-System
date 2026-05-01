@@ -154,3 +154,54 @@ model KnowledgeBase {
 
   @@index([category])
 }
+
+// ---- AIML service models ----
+// Tables are written by the Python apps/aiml-service via SQLAlchemy/Alembic.
+// Prisma describes the same physical tables here so the TS API can read them
+// (audit dashboards, feedback exports) with type safety. Column names use
+// @map() to pin to the snake_case columns Alembic creates.
+//
+// The `embedding` column on aiml_documents is a pgvector vector(1536),
+// which Prisma 6 does not model natively — it's invisible to Prisma but
+// fully managed by the Python migration.
+
+model Document {
+  id        String   @id @db.Uuid
+  text      String   @db.Text
+  metadata  Json
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("aiml_documents")
+}
+
+model Feedback {
+  id        String   @id @db.Uuid
+  messageId String   @map("message_id")
+  userId    String   @map("user_id")
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([messageId], map: "ix_aiml_feedback_message_id")
+  @@index([userId], map: "ix_aiml_feedback_user_id")
+  @@map("aiml_feedback")
+}
+
+model AiAuditLog {
+  id         String   @id @db.Uuid
+  userId     String   @map("user_id")
+  route      String
+  model      String
+  promptHash String   @map("prompt_hash")
+  tokensIn   Int      @map("tokens_in")
+  tokensOut  Int      @map("tokens_out")
+  costUsd    Decimal? @map("cost_usd") @db.Decimal(10, 6)
+  latencyMs  Int      @map("latency_ms")
+  status     String
+  error      String?  @db.Text
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([userId, createdAt], map: "ix_aiml_audit_logs_user_created")
+  @@index([createdAt], map: "ix_aiml_audit_logs_created_at")
+  @@map("aiml_audit_logs")
+}
