@@ -127,6 +127,33 @@ describe("agent.routes proxy", () => {
     expect(headers.get("Authorization")).toBe("Bearer test-token");
   });
 
+  it("forwards inbound x-request-id to /v1/agents/run and echoes it back", async () => {
+    fetchSpy.mockResolvedValueOnce(
+      new Response("event: done\ndata: {}\n\n", {
+        status: 200,
+        headers: { "content-type": "text/event-stream" },
+      }),
+    );
+
+    const app = makeApp();
+    const inboundRid = "agent-rid-42";
+    const res = await app.request("/api/agent/run", {
+      method: "POST",
+      headers: {
+        "x-request-id": inboundRid,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ message: "hi" }),
+    });
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get("x-request-id")).toBe(inboundRid);
+
+    const init = fetchSpy.mock.calls[0][1] as RequestInit;
+    const headers = init.headers as Headers;
+    expect(headers.get("x-request-id")).toBe(inboundRid);
+  });
+
   it("fetches a conversation by id", async () => {
     fetchSpy.mockResolvedValueOnce(
       new Response(

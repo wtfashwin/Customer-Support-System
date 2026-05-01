@@ -111,6 +111,59 @@ describe("rag.routes proxy", () => {
     expect(fetchSpy).toHaveBeenCalledTimes(2);
   });
 
+  it("forwards inbound x-request-id verbatim and echoes it on the response", async () => {
+    fetchSpy.mockResolvedValueOnce(
+      new Response(JSON.stringify({ ingested: 1, nodes: 1 }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+
+    const app = makeApp();
+    const inboundRid = "req-abc-123";
+    const res = await app.request("/api/rag/ingest", {
+      method: "POST",
+      headers: {
+        "x-request-id": inboundRid,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ documents: [{ id: "d", text: "t", metadata: {} }] }),
+    });
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get("x-request-id")).toBe(inboundRid);
+
+    const init = fetchSpy.mock.calls[0][1] as RequestInit;
+    const headers = init.headers as Headers;
+    expect(headers.get("x-request-id")).toBe(inboundRid);
+  });
+
+  it("generates a fresh x-request-id when caller omits the header", async () => {
+    fetchSpy.mockResolvedValueOnce(
+      new Response(JSON.stringify({ ingested: 1, nodes: 1 }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+
+    const app = makeApp();
+    const res = await app.request("/api/rag/ingest", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ documents: [{ id: "d", text: "t", metadata: {} }] }),
+    });
+
+    expect(res.status).toBe(200);
+    const echoed = res.headers.get("x-request-id");
+    expect(echoed).toBeTruthy();
+    // UUIDv4 shape
+    expect(echoed).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+
+    const init = fetchSpy.mock.calls[0][1] as RequestInit;
+    const headers = init.headers as Headers;
+    expect(headers.get("x-request-id")).toBe(echoed);
+  });
+
   it("/api/rag/query passes through SSE body and forwards auth", async () => {
     const sse = "event: token\ndata: {\"delta\":\"hi\"}\n\nevent: done\ndata: {\"answer\":\"hi\"}\n\n";
     fetchSpy.mockResolvedValueOnce(
