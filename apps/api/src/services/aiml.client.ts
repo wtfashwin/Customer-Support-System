@@ -169,3 +169,98 @@ export async function documentAnalyze(
   }
   return resp;
 }
+
+/**
+ * Generic streaming proxy. Returns the raw upstream Response so the caller
+ * can pipe SSE chunks straight to the browser. Use for POST endpoints that
+ * the AIML service streams (`/v1/rag/query`, `/v1/agents/run`).
+ */
+export async function streamProxy(
+  path: string,
+  jsonBody: unknown,
+  opts?: AimlClientOptions,
+): Promise<Response> {
+  const url = `${getBaseUrl(opts)}${path.startsWith("/") ? path : `/${path}`}`;
+  const headers = buildHeaders(opts, {
+    "Content-Type": "application/json",
+    Accept: "text/event-stream",
+  });
+  const resp = await fetchWithRetry(
+    url,
+    { method: "POST", headers, body: JSON.stringify(jsonBody) },
+    opts?.timeoutMs ?? STREAM_TIMEOUT_MS,
+  );
+  if (!resp.ok) {
+    throw await readErrorEnvelope(resp);
+  }
+  return resp;
+}
+
+// ---------- Agentic endpoints ---------------------------------------------
+
+export interface AgentRunBody {
+  message: string;
+  conversationId?: string | null;
+  topK?: number;
+  maxIterations?: number;
+}
+
+export async function agentRun(
+  body: AgentRunBody,
+  opts?: AimlClientOptions,
+): Promise<Response> {
+  return streamProxy("/v1/agents/run", body, opts);
+}
+
+export interface AimlMessage {
+  id: string;
+  role: string;
+  content: string;
+  toolCalls: unknown[] | null;
+  toolResults: unknown[] | null;
+  tokensIn: number;
+  tokensOut: number;
+  createdAt: string;
+}
+
+export interface AimlConversation {
+  id: string;
+  title: string | null;
+  createdAt: string;
+  updatedAt: string;
+  messages: AimlMessage[];
+}
+
+export async function createConversation(
+  body: { title?: string; metadata?: Record<string, unknown> },
+  opts?: AimlClientOptions,
+): Promise<{ id: string; title: string | null; createdAt: string }> {
+  const url = `${getBaseUrl(opts)}/v1/conversations`;
+  const headers = buildHeaders(opts, { "Content-Type": "application/json" });
+  const resp = await fetchWithRetry(
+    url,
+    { method: "POST", headers, body: JSON.stringify(body) },
+    opts?.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+  );
+  if (!resp.ok) {
+    throw await readErrorEnvelope(resp);
+  }
+  return (await resp.json()) as { id: string; title: string | null; createdAt: string };
+}
+
+export async function getConversation(
+  conversationId: string,
+  opts?: AimlClientOptions,
+): Promise<AimlConversation> {
+  const url = `${getBaseUrl(opts)}/v1/conversations/${encodeURIComponent(conversationId)}`;
+  const headers = buildHeaders(opts);
+  const resp = await fetchWithRetry(
+    url,
+    { method: "GET", headers },
+    opts?.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+  );
+  if (!resp.ok) {
+    throw await readErrorEnvelope(resp);
+  }
+  return (await resp.json()) as AimlConversation;
+}

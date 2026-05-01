@@ -351,8 +351,131 @@ Routes that depend on Azure services return `503` with `code: "not_configured"` 
 
 ---
 
-## 6. Change log
+## 6. Agentic endpoints (added 2026-05-08)
+
+The agentic surface lets a LangGraph-driven agent decide which tools to call (order
+lookup, payment lookup, knowledge-base search, ticket creation, human escalation),
+execute them, and synthesize a cited answer. Replaces the lightweight classifier on
+`/v1/agents/route` for any flow that needs multi-step reasoning.
+
+### 6.1 New scope
+
+| Scope | Purpose |
+| --- | --- |
+| `aiml:tools:invoke` | Required for `/v1/agents/run`. Implies the right to execute any registered tool. Restricted by Auth0 RBAC; do not grant to public clients. |
+
+### 6.2 Endpoints
+
+| Method | Path | Scope | Purpose |
+| --- | --- | --- | --- |
+| POST | `/v1/agents/run` | `aiml:tools:invoke` | SSE stream of tool calls, results, tokens, and final answer |
+| POST | `/v1/conversations` | `aiml:write` | Create an empty conversation, returns `{id}` |
+| GET  | `/v1/conversations/:id` | `aiml:read` | Fetch a conversation with its full message history |
+
+### 6.3 `POST /v1/agents/run`
+
+**Request:**
+```json
+{
+  "message": "Where is my order ORD-1042?",
+  "conversationId": "uuid-or-null",
+  "topK": 4,
+  "maxIterations": 5
+}
+```
+
+`conversationId` is optional. When omitted the service creates a fresh conversation
+and returns its id in the final `done` event. `maxIterations` caps the plan/tool
+loop (default 5, max 10).
+
+**Response:** `text/event-stream` with the following named events, in order:
+
+| Event | Payload | When |
+| --- | --- | --- |
+| `source` | `{ "id": "...", "score": float, "snippet": "...", "metadata": {...} }` | Once per retrieved KB chunk, before any tool calls |
+| `tool_call` | `{ "callId": "uuid", "name": "lookup_order", "args": { ... } }` | Before each tool runs; multiple may interleave when the agent batches calls |
+| `tool_result` | `{ "callId": "uuid", "ok": true, "result": { ... } }` or `{ "callId": "uuid", "ok": false, "error": "string" }` | After each tool returns. Failures are surfaced — they do not 500 the request |
+| `token` | `{ "delta": "string" }` | Per token of the synthesized final answer |
+| `done` | `{ "answer": "...", "conversationId": "uuid", "messageId": "uuid", "toolCalls": [{...}], "tokens": { "prompt": int, "completion": int }, "latencyMs": int }` | Final summary |
+| `error` | `{ "code": "string", "message": "string" }` | Recoverable error mid-stream; client should close |
+
+**Iteration cap:** if the agent wants to call more tools than `maxIterations`
+allows, the graph short-circuits to `synthesize` with whatever evidence it already
+has. The final `done.toolCalls` list reflects what actually executed.
+
+### 6.4 `POST /v1/conversations`
+
+**Request:** `{ "title": "string-optional", "metadata": { ... }-optional }`
+**Response 200:**
+```json
+{ "id": "uuid", "title": "string-or-null", "createdAt": "ISO8601" }
+```
+
+### 6.5 `GET /v1/conversations/:id`
+
+Returns the conversation with all messages in `created_at` ascending order. The
+caller must own the conversation (`user_id == sub`) or hold `aiml:admin`.
+
+**Response 200:**
+```json
+{
+  "id": "uuid",
+  "title": "string-or-null",
+  "createdAt": "ISO8601",
+  "updatedAt": "ISO8601",
+  "messages": [
+    {
+      "id": "uuid",
+      "role": "user|assistant|system|tool",
+      "content": "string",
+      "toolCalls": [{ "callId": "uuid", "name": "string", "args": {} }] ,
+      "toolResults": [{ "callId": "uuid", "ok": bool, "result": {}, "error": "string-or-null" }],
+      "tokensIn": int,
+      "tokensOut": int,
+      "createdAt": "ISO8601"
+    }
+  ]
+}
+```
+
+### 6.6 Tool catalog
+
+All tools are registered in `apps/aiml-service/app/services/tools/`. Their input and
+output schemas are Pydantic-validated; the `ToolExecutor` writes one
+`AiAuditLog` row per invocation with `route="tool:<name>"`.
+
+| Tool | Input schema | Output schema | Notes |
+| --- | --- | --- | --- |
+| `lookup_order` | `{ "orderNumber": "ORD-..." }` | `{ "status": "...", "items": [...], "trackingId": "...", "carrier": "...", "deliveryDate": "ISO8601-or-null", "totalAmount": float }` | Reads Prisma `Order` table |
+| `lookup_payment` | `{ "invoiceNumber": "INV-..." }` | `{ "amount": float, "status": "...", "method": "...", "refundStatus": "...-or-null", "refundAmount": float-or-null }` | Reads Prisma `Payment` |
+| `search_knowledge_base` | `{ "query": "string", "topK": 1-10 }` | `{ "hits": [{ "id": "...", "snippet": "...", "score": float }] }` | Calls `/v1/search/semantic` if Azure Search is configured, otherwise falls back to pgvector |
+| `create_support_ticket` | `{ "summary": "string", "priority": "low\|normal\|high\|urgent" }` | `{ "ticketId": "uuid", "status": "open" }` | Writes a row to `aiml_tickets` |
+| `escalate_to_human` | `{ "reason": "string" }` | `{ "queued": true, "channel": "ws-handoff" }` | Pushes a frame onto the WS handoff queue keyed by `conversationId` |
+
+### 6.7 Error envelope additions
+
+| HTTP | `code` | When |
+| --- | --- | --- |
+| 400 | `tool_args_invalid` | Pydantic validation rejected tool args mid-run; emitted as `tool_result {ok:false}` not as a top-level error |
+| 409 | `conversation_owner_mismatch` | Caller tried to read/append a conversation they don't own |
+| 422 | `iteration_cap_exceeded` | Internal — never surfaced to clients (graph short-circuits instead) |
+
+### 6.8 Hono proxy mapping additions
+
+`apps/api` exposes the agentic surface under `/api/agent/*` (singular — `/api/agents/*`
+is reserved for the legacy classifier flow):
+
+| Hono route | Method | Proxies to |
+| --- | --- | --- |
+| `/api/agent/run` | POST | `POST /v1/agents/run` (SSE pass-through) |
+| `/api/agent/conversations` | POST | `POST /v1/conversations` |
+| `/api/agent/conversations/:id` | GET | `GET /v1/conversations/:id` |
+
+---
+
+## 7. Change log
 
 | Date | Change |
 | --- | --- |
 | 2026-05-01 | Initial contract published. |
+| 2026-05-08 | Added agentic endpoints: `/v1/agents/run`, `/v1/conversations*`, scope `aiml:tools:invoke`, tool catalog, SSE events `tool_call`/`tool_result`. |

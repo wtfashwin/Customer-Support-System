@@ -7,6 +7,7 @@ import { chatRoutes } from "./routes/chat.routes.js";
 import { agentRoutes } from "./routes/agents.routes.js";
 import { healthRoutes } from "./routes/health.routes.js";
 import { ragRoutes } from "./routes/rag.routes.js";
+import { agentRoutes as agentToolUseRoutes } from "./routes/agent.routes.js";
 import { errorMiddleware } from "./middleware/error.middleware.js";
 import { createCorsMiddleware } from "./middleware/cors.middleware.js";
 
@@ -53,6 +54,7 @@ const api = new Hono()
   .use("*", errorMiddleware)
   .route("/chat", chatRoutes)
   .route("/agents", agentRoutes)
+  .route("/agent", agentToolUseRoutes)
   .route("/rag", ragRoutes)
   .route("/health", healthRoutes);
 

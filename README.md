@@ -175,8 +175,10 @@ pnpm --filter=@repo/web build
 ## 🤖 AIML Service
 
 A Python 3.12 FastAPI service at `apps/aiml-service` adds RAG, document
-intelligence, semantic search, agent routing, and live handoff. Hono
-proxies a subset under `/api/rag/*` after attaching the Auth0 JWT.
+intelligence, semantic search, agent routing, **agentic workflows with
+tool use** (`/v1/agents/run`), conversation memory, and live handoff.
+Hono proxies under `/api/rag/*` and `/api/agent/*` after attaching the
+Auth0 JWT.
 
 ### Quick start
 
@@ -203,13 +205,19 @@ curl -N -X POST localhost:3001/api/rag/query \
   -H "Authorization: Bearer $AUTH0_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"query":"What is your refund policy?","top_k":3}'
+
+# Agentic flow with tool use — streams tool_call/tool_result/token/done
+curl -N -X POST localhost:3001/api/agent/run \
+  -H "Authorization: Bearer $AUTH0_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"message":"Where is order ORD-1042?","topK":4}'
 ```
 
 ### Tests
 
 ```bash
 cd apps/aiml-service
-uv run pytest --cov=app           # 47 tests, 83% coverage, gate at 80%
+uv run pytest --cov=app           # 69 tests, 86% coverage, gate at 82%
 uv run python tests/eval/run_eval.py --mode dry --threshold 0.6
 ```
 

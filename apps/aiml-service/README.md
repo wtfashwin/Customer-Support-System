@@ -30,6 +30,22 @@ curl -s localhost:8000/health
 curl -s localhost:8000/ready | jq
 ```
 
+Agentic flow with tool use:
+
+```bash
+TOKEN=...  # Auth0 JWT with scope 'aiml:tools:invoke aiml:write'
+
+# Streams: source → tool_call → tool_result → token (×N) → done
+curl -N -X POST localhost:8000/v1/agents/run \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"message":"Where is order ORD-1042?","topK":4,"maxIterations":5}'
+
+# List a conversation's messages
+curl -s localhost:8000/v1/conversations/<convo-uuid> \
+  -H "Authorization: Bearer $TOKEN" | jq
+```
+
 ## Tests
 
 ```bash
