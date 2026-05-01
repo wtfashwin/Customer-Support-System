@@ -1,0 +1,3 @@
+Account & Login
+
+To reset your password, visit /account/reset and enter the email associated with your account. A reset link will arrive within 5 minutes. The link expires after 1 hour. Two-factor authentication can be enabled from /account/security and supports authenticator apps and SMS. If you are locked out, contact support@example.com from your registered email address.

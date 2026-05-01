@@ -1,0 +1,26 @@
+{
+  "version": "1",
+  "description": "Golden Q/A pairs for the FAQ corpus in tests/eval/corpus/. Each item lists the question, the expected answer keywords (must appear in the model's answer for the question to count as correct), and the source file the answer came from.",
+  "items": [
+    { "id": "q-01", "question": "How long do refunds take to process?", "expected_keywords": ["5", "business days"], "source": "refunds.txt" },
+    { "id": "q-02", "question": "What is the refund window after purchase?", "expected_keywords": ["30 days"], "source": "refunds.txt" },
+    { "id": "q-03", "question": "How are refunds issued?", "expected_keywords": ["original payment method"], "source": "refunds.txt" },
+    { "id": "q-04", "question": "How long does standard US shipping take?", "expected_keywords": ["3", "business days"], "source": "shipping.txt" },
+    { "id": "q-05", "question": "When does free shipping apply?", "expected_keywords": ["$50"], "source": "shipping.txt" },
+    { "id": "q-06", "question": "How fast is express shipping?", "expected_keywords": ["1", "business days"], "source": "shipping.txt" },
+    { "id": "q-07", "question": "Where do I reset my password?", "expected_keywords": ["/account/reset"], "source": "account.txt" },
+    { "id": "q-08", "question": "How long is the password reset link valid?", "expected_keywords": ["1 hour"], "source": "account.txt" },
+    { "id": "q-09", "question": "How can I enable two-factor auth?", "expected_keywords": ["/account/security"], "source": "account.txt" },
+    { "id": "q-10", "question": "Which payment methods do you accept?", "expected_keywords": ["Visa", "PayPal"], "source": "billing.txt" },
+    { "id": "q-11", "question": "When are subscriptions billed?", "expected_keywords": ["monthly"], "source": "billing.txt" },
+    { "id": "q-12", "question": "How do I cancel my subscription?", "expected_keywords": ["/account/billing"], "source": "billing.txt" },
+    { "id": "q-13", "question": "Do you store full credit card numbers?", "expected_keywords": ["no", "Stripe"], "source": "billing.txt" },
+    { "id": "q-14", "question": "Where can I track an order?", "expected_keywords": ["/orders/"], "source": "orders.txt" },
+    { "id": "q-15", "question": "What time is the same-day shipping cutoff?", "expected_keywords": ["2pm"], "source": "orders.txt" },
+    { "id": "q-16", "question": "Where is the warehouse located?", "expected_keywords": ["Memphis"], "source": "orders.txt" },
+    { "id": "q-17", "question": "Until when can I modify an order?", "expected_keywords": ["30 minutes", "processing"], "source": "orders.txt" },
+    { "id": "q-18", "question": "How long does international shipping take?", "expected_keywords": ["7", "21"], "source": "shipping.txt" },
+    { "id": "q-19", "question": "What happens if I'm locked out of my account?", "expected_keywords": ["support@example.com"], "source": "account.txt" },
+    { "id": "q-20", "question": "What happens to a cancelled subscription?", "expected_keywords": ["end", "billing cycle"], "source": "billing.txt" }
+  ]
+}
