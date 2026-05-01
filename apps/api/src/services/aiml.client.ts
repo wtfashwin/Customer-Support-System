@@ -147,9 +147,13 @@ export async function ragIngest(
 /**
  * POST /v1/document/analyze — multipart upload pass-through. Accepts the
  * inbound Request so headers + body are forwarded verbatim.
+ *
+ * `inboundBody` is typed as ArrayBuffer (the canonical shape Hono returns
+ * from c.req.arrayBuffer()) so this works without DOM lib types — fetch's
+ * RequestInit.body accepts ArrayBuffer at runtime.
  */
 export async function documentAnalyze(
-  inboundBody: BodyInit,
+  inboundBody: ArrayBuffer | Uint8Array | string,
   contentType: string,
   opts?: AimlClientOptions,
 ): Promise<Response> {
