@@ -7,18 +7,17 @@ from the input schema so the LLM planner can invoke them directly."""
 from __future__ import annotations
 
 import abc
-from typing import Any, ClassVar, Generic, TypeVar
+from typing import Any, ClassVar
 
 from pydantic import BaseModel, ValidationError
 
 from app.core.exceptions import ValidationFailed
 
-ArgsT = TypeVar("ArgsT", bound=BaseModel)
-ResultT = TypeVar("ResultT", bound=BaseModel)
 
+class Tool[ArgsT: BaseModel, ResultT: BaseModel](abc.ABC):
+    """Subclass and set the three class attributes; implement `run()`.
 
-class Tool(abc.ABC, Generic[ArgsT, ResultT]):
-    """Subclass and set the three class attributes; implement `run()`."""
+    Uses PEP 695 generic syntax (Python 3.12+)."""
 
     name: ClassVar[str]
     description: ClassVar[str]

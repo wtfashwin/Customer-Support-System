@@ -9,13 +9,11 @@ import uuid
 from collections.abc import AsyncIterator
 from typing import Any
 
-import pytest
 from pydantic import BaseModel
 
 from app.services.agent_graph import AgentGraph
 from app.services.tools import Tool, ToolRegistry
 from app.services.tools.executor import ToolExecutor
-
 
 # --------------------------- helpers ---------------------------------------
 

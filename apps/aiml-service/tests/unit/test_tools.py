@@ -7,10 +7,9 @@ needing a live Postgres."""
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -18,7 +17,7 @@ from app.services.tools import ToolRegistry, register_default_tools
 from app.services.tools.escalate import EscalateArgs, EscalateToHumanTool, get_handoff_queue
 from app.services.tools.executor import ToolExecutor
 from app.services.tools.kb import SearchKBArgs, SearchKnowledgeBaseTool
-from app.services.tools.order import LookupOrderArgs, LookupOrderTool
+from app.services.tools.order import LookupOrderTool
 from app.services.tools.payment import LookupPaymentArgs, LookupPaymentTool
 from app.services.tools.ticket import CreateSupportTicketTool, CreateTicketArgs
 
@@ -106,7 +105,7 @@ async def test_executor_runs_tool_and_returns_result(monkeypatch):
         items=[{"sku": "A", "qty": 2}],
         trackingId="T-1",
         carrier="UPS",
-        deliveryDate=datetime(2026, 5, 10, tzinfo=timezone.utc),
+        deliveryDate=datetime(2026, 5, 10, tzinfo=UTC),
         totalAmount=Decimal("42.50"),
     )
     monkeypatch.setattr(

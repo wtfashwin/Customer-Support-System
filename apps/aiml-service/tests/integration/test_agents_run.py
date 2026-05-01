@@ -8,14 +8,13 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import respx
 from fastapi.testclient import TestClient
 from httpx import Response
 
-from app.api.v1 import agents as agents_module
 from app.db.models import Conversation, Message
 from app.db.session import get_db
 from app.main import app
@@ -51,15 +50,15 @@ class _MemSession:
             if obj.id is None:
                 obj.id = uuid.uuid4()
             if obj.created_at is None:
-                obj.created_at = datetime.now(timezone.utc)
+                obj.created_at = datetime.now(UTC)
             if obj.updated_at is None:
-                obj.updated_at = datetime.now(timezone.utc)
+                obj.updated_at = datetime.now(UTC)
             _STORE.conversations[obj.id] = obj
         elif isinstance(obj, Message):
             if obj.id is None:
                 obj.id = uuid.uuid4()
             if obj.created_at is None:
-                obj.created_at = datetime.now(timezone.utc)
+                obj.created_at = datetime.now(UTC)
             _STORE.messages.append(obj)
 
     async def commit(self):
@@ -174,6 +173,7 @@ def _patch_all(monkeypatch):
     # Replace AgentGraph's default registry with one that has only a stub echo
     # tool — avoids needing real Order/Payment data.
     from pydantic import BaseModel
+
     from app.services.tools import Tool, ToolRegistry
     from app.services.tools.executor import ToolExecutor
 
@@ -191,8 +191,6 @@ def _patch_all(monkeypatch):
 
     reg = ToolRegistry()
     reg.register(_Echo())
-
-    real_init = agents_module.__dict__.get("AgentGraph")  # already imported lazily
 
     # Patch AgentGraph constructor used inside _stream_agent_events
     from app.services import agent_graph as ag_module
@@ -242,17 +240,16 @@ def test_run_streams_full_sse_sequence(jwks_payload, monkeypatch):
     _patch_all(monkeypatch)
     app.dependency_overrides[get_db] = _override_db()
     try:
-        with TestClient(app) as client:
-            with client.stream(
-                "POST",
-                "/v1/agents/run",
-                json={"message": "Where is order ORD-1?", "topK": 1},
-                headers={
-                    "Authorization": f"Bearer {make_token(scopes='aiml:tools:invoke aiml:write')}"
-                },
-            ) as resp:
-                assert resp.status_code == 200
-                body = b"".join(resp.iter_bytes()).decode()
+        with TestClient(app) as client, client.stream(
+            "POST",
+            "/v1/agents/run",
+            json={"message": "Where is order ORD-1?", "topK": 1},
+            headers={
+                "Authorization": f"Bearer {make_token(scopes='aiml:tools:invoke aiml:write')}"
+            },
+        ) as resp:
+            assert resp.status_code == 200
+            body = b"".join(resp.iter_bytes()).decode()
         events = _parse_sse(body)
         names = [e[0] for e in events]
 
@@ -303,22 +300,21 @@ def test_run_reuses_existing_conversation(jwks_payload, monkeypatch):
         user_id="auth0|test-user",
         title="existing",
         convo_metadata={},
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     _STORE.conversations[pre_id] = pre
 
     try:
-        with TestClient(app) as client:
-            with client.stream(
-                "POST",
-                "/v1/agents/run",
-                json={"message": "follow-up", "conversationId": str(pre_id)},
-                headers={
-                    "Authorization": f"Bearer {make_token(scopes='aiml:tools:invoke aiml:write')}"
-                },
-            ) as resp:
-                body = b"".join(resp.iter_bytes()).decode()
+        with TestClient(app) as client, client.stream(
+            "POST",
+            "/v1/agents/run",
+            json={"message": "follow-up", "conversationId": str(pre_id)},
+            headers={
+                "Authorization": f"Bearer {make_token(scopes='aiml:tools:invoke aiml:write')}"
+            },
+        ) as resp:
+            body = b"".join(resp.iter_bytes()).decode()
         events = _parse_sse(body)
         done = next(p for n, p in events if n == "done")
         assert done["conversationId"] == str(pre_id)
@@ -340,8 +336,8 @@ def test_get_conversation_returns_messages(jwks_payload):
         user_id="auth0|test-user",
         title="t",
         convo_metadata={},
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     _STORE.conversations[cid] = convo
     for role, content in (("user", "hi"), ("assistant", "hello back")):
@@ -355,7 +351,7 @@ def test_get_conversation_returns_messages(jwks_payload):
                 tool_results=None,
                 tokens_in=0,
                 tokens_out=0,
-                created_at=datetime.now(timezone.utc),
+                created_at=datetime.now(UTC),
             )
         )
 
@@ -386,8 +382,8 @@ def test_get_conversation_owner_mismatch_returns_403(jwks_payload):
         user_id="auth0|someone-else",
         title="t",
         convo_metadata={},
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     app.dependency_overrides[get_db] = _override_db()
     try:
