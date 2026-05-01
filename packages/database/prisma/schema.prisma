@@ -205,3 +205,48 @@ model AiAuditLog {
   @@index([createdAt], map: "ix_aiml_audit_logs_created_at")
   @@map("aiml_audit_logs")
 }
+
+// Conversation thread for the agentic /v1/agents/run flow.
+model AimlConversation {
+  id        String        @id @db.Uuid
+  userId    String        @map("user_id")
+  title     String?       @db.VarChar(500)
+  metadata  Json
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime      @default(now()) @map("updated_at") @db.Timestamptz(6)
+  messages  AimlMessage[]
+  tickets   AimlTicket[]
+
+  @@index([userId, createdAt(sort: Desc)], map: "ix_aiml_conv_user_created")
+  @@map("aiml_conversations")
+}
+
+model AimlMessage {
+  id             String           @id @db.Uuid
+  conversationId String           @map("conversation_id") @db.Uuid
+  role           String           @db.VarChar(32)
+  content        String           @db.Text
+  toolCalls      Json?            @map("tool_calls")
+  toolResults    Json?            @map("tool_results")
+  tokensIn       Int              @default(0) @map("tokens_in")
+  tokensOut      Int              @default(0) @map("tokens_out")
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  conversation   AimlConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt], map: "ix_aiml_msg_conv_created")
+  @@map("aiml_messages")
+}
+
+model AimlTicket {
+  id             String            @id @db.Uuid
+  conversationId String?           @map("conversation_id") @db.Uuid
+  userId         String            @map("user_id")
+  summary        String            @db.Text
+  priority       String            @default("normal") @db.VarChar(16)
+  status         String            @default("open") @db.VarChar(32)
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  conversation   AimlConversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+
+  @@index([userId, status], map: "ix_aiml_tickets_user_status")
+  @@map("aiml_tickets")
+}
