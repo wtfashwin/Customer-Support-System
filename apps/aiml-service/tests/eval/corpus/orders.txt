@@ -1,0 +1,3 @@
+Orders & Tracking
+
+Orders can be tracked at /orders/<order-id> or by clicking the link in the shipping confirmation email. Orders ship from our Memphis, TN warehouse Monday through Friday. Same-day shipping is available for orders placed before 2pm local time. Order modifications (address change, item swap) are only possible before the order enters "processing" state — usually within 30 minutes of placement.

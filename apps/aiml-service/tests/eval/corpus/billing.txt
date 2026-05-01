@@ -1,0 +1,3 @@
+Billing & Payments
+
+We accept Visa, Mastercard, American Express, PayPal, Apple Pay, and Google Pay. Subscriptions are billed monthly on the same date you signed up. To cancel a subscription, go to /account/billing and click "Cancel Plan". Cancelled subscriptions remain active until the end of the current billing cycle. We do not store full credit card numbers on our servers; payments are tokenized through Stripe.

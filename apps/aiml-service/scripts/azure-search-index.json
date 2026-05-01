@@ -1,0 +1,42 @@
+{
+  "name": "customer-support",
+  "fields": [
+    { "name": "id", "type": "Edm.String", "key": true, "filterable": true, "retrievable": true },
+    { "name": "content", "type": "Edm.String", "searchable": true, "retrievable": true, "analyzer": "en.microsoft" },
+    { "name": "title", "type": "Edm.String", "searchable": true, "retrievable": true, "analyzer": "en.microsoft" },
+    { "name": "category", "type": "Edm.String", "filterable": true, "facetable": true, "retrievable": true },
+    { "name": "source", "type": "Edm.String", "filterable": true, "retrievable": true },
+    {
+      "name": "content_vector",
+      "type": "Collection(Edm.Single)",
+      "searchable": true,
+      "retrievable": false,
+      "dimensions": 1536,
+      "vectorSearchProfile": "default-profile"
+    }
+  ],
+  "vectorSearch": {
+    "profiles": [
+      { "name": "default-profile", "algorithm": "hnsw-default" }
+    ],
+    "algorithms": [
+      {
+        "name": "hnsw-default",
+        "kind": "hnsw",
+        "hnswParameters": { "m": 4, "efConstruction": 400, "metric": "cosine" }
+      }
+    ]
+  },
+  "semantic": {
+    "configurations": [
+      {
+        "name": "default",
+        "prioritizedFields": {
+          "titleField": { "fieldName": "title" },
+          "prioritizedContentFields": [{ "fieldName": "content" }],
+          "prioritizedKeywordsFields": [{ "fieldName": "category" }]
+        }
+      }
+    ]
+  }
+}

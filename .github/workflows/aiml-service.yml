@@ -1,0 +1,92 @@
+name: aiml-service
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/aiml-service/**"
+      - ".github/workflows/aiml-service.yml"
+  pull_request:
+    paths:
+      - "apps/aiml-service/**"
+      - ".github/workflows/aiml-service.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: pytest + coverage
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/aiml-service
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python 3.12
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Lint (ruff)
+        run: uv run ruff check app tests
+
+      - name: Run tests with coverage
+        env:
+          AUTH0_DOMAIN: test.auth0.com
+          AUTH0_AUDIENCE: https://aiml.test
+          OPENAI_API_KEY: sk-ci-stub
+          OPENAI_PROVIDER: openai
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/aiml_test
+          REDIS_URL: redis://localhost:6379/15
+          ENVIRONMENT: test
+        run: |
+          uv run pytest --cov=app --cov-report=term --cov-report=xml --cov-fail-under=80
+
+      - name: Upload coverage XML
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aiml-coverage
+          path: apps/aiml-service/coverage.xml
+          if-no-files-found: ignore
+
+  eval-harness:
+    name: dry-mode eval gate
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/aiml-service
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python 3.12
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Run eval harness (dry mode)
+        run: uv run python tests/eval/run_eval.py --mode dry --threshold 0.6
+
+      - name: Upload eval report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aiml-eval-report
+          path: apps/aiml-service/tests/eval/report.json
+          if-no-files-found: ignore
