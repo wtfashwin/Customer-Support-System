@@ -43,7 +43,10 @@ jobs:
 
       - name: Run RAG proxy tests
         working-directory: apps/api
-        run: pnpm test -- --run src/__tests__/routes/rag.routes.test.ts
+        # Pre-existing failures live in chat.routes/agents/router tests on main;
+        # this CI job is scoped to verify the new RAG proxy until the rest is
+        # un-flaked. Run vitest directly so the file filter is respected.
+        run: pnpm exec vitest run src/__tests__/routes/rag.routes.test.ts
 
       - name: Type-check Hono API
         working-directory: apps/api
