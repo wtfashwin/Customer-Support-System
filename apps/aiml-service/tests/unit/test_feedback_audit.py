@@ -7,7 +7,7 @@ ops to verify the route logic."""
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import respx
 from fastapi.testclient import TestClient
@@ -36,7 +36,7 @@ class _CapturingSession:
         if isinstance(obj, Feedback) and obj.id is None:
             obj.id = uuid.uuid4()
         if isinstance(obj, Feedback) and obj.created_at is None:
-            obj.created_at = datetime.now(timezone.utc)
+            obj.created_at = datetime.now(UTC)
 
     async def commit(self):
         self.committed = True
@@ -47,7 +47,7 @@ class _CapturingSession:
             if obj.id is None:
                 obj.id = uuid.uuid4()
             if obj.created_at is None:
-                obj.created_at = datetime.now(timezone.utc)
+                obj.created_at = datetime.now(UTC)
 
     async def execute(self, _stmt):
         rows = list(self._audit_rows)
@@ -141,7 +141,7 @@ async def test_audit_logs_returns_paginated_items(jwks_payload):
             latency_ms=42,
             status="ok",
             error=None,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         for i in range(3)
     ]

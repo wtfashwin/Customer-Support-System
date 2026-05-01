@@ -9,7 +9,6 @@ from collections.abc import AsyncIterator
 from typing import Any
 
 from app.config import settings
-from app.core.exceptions import NotConfigured
 from app.core.logging import get_logger
 from app.core.middleware import record_ai_call
 

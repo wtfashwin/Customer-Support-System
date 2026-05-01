@@ -8,11 +8,11 @@ from __future__ import annotations
 import hashlib
 import json
 import time
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any, Iterable
+from typing import Any
 
-from openai import AsyncAzureOpenAI, AsyncOpenAI
-from openai import APIConnectionError, RateLimitError
+from openai import APIConnectionError, AsyncAzureOpenAI, AsyncOpenAI, RateLimitError
 from tenacity import (
     AsyncRetrying,
     retry_if_exception_type,

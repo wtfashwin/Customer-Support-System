@@ -10,7 +10,6 @@ the real OpenAI API."""
 from __future__ import annotations
 
 import os
-import uuid
 
 import pytest
 
@@ -40,8 +39,8 @@ async def test_ingest_persists_nodes(monkeypatch):
             conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
 
         # Mock the embedding model so we don't hit OpenAI.
-        from llama_index.core.settings import Settings as LISettings
         from llama_index.core.embeddings.mock_embed_model import MockEmbedding
+        from llama_index.core.settings import Settings as LISettings
 
         LISettings.embed_model = MockEmbedding(embed_dim=1536)
 

@@ -172,6 +172,53 @@ pnpm --filter=@repo/web build
 - **Animations**: Framer Motion
 - **Type Safety**: TypeScript + Hono RPC
 
+## 🤖 AIML Service
+
+A Python 3.12 FastAPI service at `apps/aiml-service` adds RAG, document
+intelligence, semantic search, agent routing, and live handoff. Hono
+proxies a subset under `/api/rag/*` after attaching the Auth0 JWT.
+
+### Quick start
+
+```bash
+cd apps/aiml-service
+cp .env.example .env  # set OPENAI_API_KEY, AUTH0_*, DATABASE_URL
+uv sync
+uv run alembic upgrade head
+uv run uvicorn app.main:app --reload --port 8000
+```
+
+### Smoke test through Hono
+
+```bash
+# AIML service direct
+curl -s localhost:8000/health
+curl -s -X POST localhost:8000/v1/embed \
+  -H "Authorization: Bearer $AUTH0_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"texts":["hello world"]}'
+
+# Hono proxy (forwards Authorization)
+curl -N -X POST localhost:3001/api/rag/query \
+  -H "Authorization: Bearer $AUTH0_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"What is your refund policy?","top_k":3}'
+```
+
+### Tests
+
+```bash
+cd apps/aiml-service
+uv run pytest --cov=app           # 47 tests, 83% coverage, gate at 80%
+uv run python tests/eval/run_eval.py --mode dry --threshold 0.6
+```
+
+### Full surface
+
+See [docs/AIML_API_CONTRACT.md](docs/AIML_API_CONTRACT.md) for the
+authoritative contract — endpoints, scopes, error envelope, SSE event
+names, and Hono proxy mapping.
+
 ## 📝 License
 
 MIT

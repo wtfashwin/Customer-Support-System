@@ -43,7 +43,7 @@ async def handoff(ws: WebSocket) -> None:
     await ws.accept()
     try:
         sub = await _auth_handshake(ws)
-    except (Unauthenticated, asyncio.TimeoutError, json.JSONDecodeError, KeyError):
+    except (TimeoutError, Unauthenticated, json.JSONDecodeError, KeyError):
         await ws.close(code=4401)
         return
     except MissingScope:

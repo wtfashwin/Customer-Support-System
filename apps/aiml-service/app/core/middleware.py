@@ -84,8 +84,8 @@ async def _persist_audit(ctx: AuditContext, request_latency_ms: int) -> None:
     if not ctx.calls:
         return
     try:
-        from app.db.session import AsyncSessionLocal
         from app.db.models import AiAuditLog
+        from app.db.session import AsyncSessionLocal
 
         async with AsyncSessionLocal() as session:
             for call in ctx.calls:

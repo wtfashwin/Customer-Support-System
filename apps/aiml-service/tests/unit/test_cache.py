@@ -3,8 +3,8 @@ the test runs without a live Redis instance."""
 
 from __future__ import annotations
 
-import pytest
 import fakeredis.aioredis
+import pytest
 
 from app.services import cache as cache_module
 

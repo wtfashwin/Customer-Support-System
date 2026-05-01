@@ -6,7 +6,6 @@ exercises the SSE event sequence end-to-end without any network calls."""
 from __future__ import annotations
 
 import json
-from collections.abc import AsyncIterator
 
 import respx
 from fastapi.testclient import TestClient
@@ -68,15 +67,14 @@ async def test_query_streams_token_then_done(jwks_payload, monkeypatch):
     monkeypatch.setattr(rag_module, "_retrieve_sources", fake_retrieve)
     monkeypatch.setattr(openai_module, "chat_stream", fake_stream)
 
-    with TestClient(app) as client:
-        with client.stream(
-            "POST",
-            "/v1/rag/query",
-            json={"query": "refund?", "top_k": 1},
-            headers={"Authorization": f"Bearer {make_token(scopes='aiml:read')}"},
-        ) as resp:
-            assert resp.status_code == 200
-            body = b"".join(resp.iter_bytes()).decode()
+    with TestClient(app) as client, client.stream(
+        "POST",
+        "/v1/rag/query",
+        json={"query": "refund?", "top_k": 1},
+        headers={"Authorization": f"Bearer {make_token(scopes='aiml:read')}"},
+    ) as resp:
+        assert resp.status_code == 200
+        body = b"".join(resp.iter_bytes()).decode()
 
     events = _parse_sse(body)
     names = [e[0] for e in events]
@@ -120,14 +118,13 @@ async def test_query_emits_error_event_when_stream_fails(jwks_payload, monkeypat
     monkeypatch.setattr(rag_module, "_retrieve_sources", fake_retrieve)
     monkeypatch.setattr(openai_module, "chat_stream", boom)
 
-    with TestClient(app) as client:
-        with client.stream(
-            "POST",
-            "/v1/rag/query",
-            json={"query": "refund?"},
-            headers={"Authorization": f"Bearer {make_token(scopes='aiml:read')}"},
-        ) as resp:
-            body = b"".join(resp.iter_bytes()).decode()
+    with TestClient(app) as client, client.stream(
+        "POST",
+        "/v1/rag/query",
+        json={"query": "refund?"},
+        headers={"Authorization": f"Bearer {make_token(scopes='aiml:read')}"},
+    ) as resp:
+        body = b"".join(resp.iter_bytes()).decode()
 
     events = _parse_sse(body)
     error = next((p for n, p in events if n == "error"), None)

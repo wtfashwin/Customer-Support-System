@@ -1,0 +1,50 @@
+name: api
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/api/**"
+      - "packages/**"
+      - ".github/workflows/api.yml"
+  pull_request:
+    paths:
+      - "apps/api/**"
+      - "packages/**"
+      - ".github/workflows/api.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: vitest (rag.routes)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile=false
+
+      - name: Build workspace packages
+        run: |
+          pnpm --filter @repo/database build
+          pnpm --filter @repo/shared-types build
+
+      - name: Run RAG proxy tests
+        working-directory: apps/api
+        run: pnpm test -- --run src/__tests__/routes/rag.routes.test.ts
+
+      - name: Type-check Hono API
+        working-directory: apps/api
+        run: pnpm exec tsc --noEmit

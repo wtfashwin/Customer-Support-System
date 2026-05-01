@@ -93,7 +93,12 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM", "N"]
-ignore = ["E501", "B008"]
+# N815/N818/N803/N805: API request/response models intentionally use camelCase
+# to match the JSON contract (documented in docs/AIML_API_CONTRACT.md). Custom
+# exceptions intentionally drop the "Error" suffix for brevity (Unauthenticated,
+# MissingScope, etc.). Inner class methods use shadowed `self_*` names where
+# needed for clarity in test fakes.
+ignore = ["E501", "B008", "N815", "N818", "N803", "N805", "SIM105"]
 
 [tool.mypy]
 python_version = "3.12"

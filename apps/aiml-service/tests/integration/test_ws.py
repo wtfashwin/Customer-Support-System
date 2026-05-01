@@ -21,12 +21,11 @@ JWKS_URL = "https://test.auth0.com/.well-known/jwks.json"
 def test_ws_authed_handshake_and_echo(jwks_payload):
     respx.get(JWKS_URL).mock(return_value=Response(200, json=jwks_payload))
     token = make_token(scopes="aiml:read")
-    with TestClient(app) as client:
-        with client.websocket_connect("/v1/ws/handoff") as ws:
-            ws.send_text(json.dumps({"type": "auth", "token": token, "sessionId": "s1"}))
-            ws.send_text(json.dumps({"type": "message", "sender": "user", "content": "hi"}))
-            received = json.loads(ws.receive_text())
-            assert received == {"type": "message", "sender": "user", "content": "hi"}
+    with TestClient(app) as client, client.websocket_connect("/v1/ws/handoff") as ws:
+        ws.send_text(json.dumps({"type": "auth", "token": token, "sessionId": "s1"}))
+        ws.send_text(json.dumps({"type": "message", "sender": "user", "content": "hi"}))
+        received = json.loads(ws.receive_text())
+        assert received == {"type": "message", "sender": "user", "content": "hi"}
 
 
 @respx.mock
