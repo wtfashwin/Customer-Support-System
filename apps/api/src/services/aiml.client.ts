@@ -15,6 +15,11 @@ const RETRY_DELAYS_MS = [200, 600, 1800];
 export interface AimlClientOptions {
   baseUrl?: string;
   authorization?: string | null;
+  /**
+   * Request id to forward to the AIML service so logs from both services
+   * can be correlated end-to-end. Forwarded as the `x-request-id` header.
+   */
+  requestId?: string | null;
   timeoutMs?: number;
 }
 
@@ -39,6 +44,9 @@ function buildHeaders(opts: AimlClientOptions | undefined, extra: Record<string,
   const headers = new Headers(extra);
   if (opts?.authorization) {
     headers.set("Authorization", opts.authorization);
+  }
+  if (opts?.requestId) {
+    headers.set("x-request-id", opts.requestId);
   }
   return headers;
 }
