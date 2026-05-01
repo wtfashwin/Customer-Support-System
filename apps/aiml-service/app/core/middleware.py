@@ -91,7 +91,7 @@ async def _persist_audit(ctx: AuditContext, request_latency_ms: int) -> None:
             for call in ctx.calls:
                 row = AiAuditLog(
                     user_id=ctx.user_id or "anonymous",
-                    route=ctx.route,
+                    route=call.get("route") or ctx.route,
                     model=call.get("model", "unknown"),
                     prompt_hash=call.get("prompt_hash", ""),
                     tokens_in=call.get("tokens_in", 0),
