@@ -1,0 +1,50 @@
+name: web
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/web/**"
+      - "apps/api/**"  # web's RPC client imports apps/api types
+      - "packages/**"
+      - ".github/workflows/web.yml"
+      - ".github/actions/setup-node-pnpm/**"
+  pull_request:
+    paths:
+      - "apps/web/**"
+      - "apps/api/**"
+      - "packages/**"
+      - ".github/workflows/web.yml"
+      - ".github/actions/setup-node-pnpm/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: web-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  typecheck:
+    name: tsc --noEmit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+      - name: Type-check apps/web
+        run: pnpm --filter @repo/web exec tsc --noEmit
+
+  build:
+    name: next build
+    runs-on: ubuntu-latest
+    env:
+      # Public URL is read at build time; dummy value keeps next build
+      # happy without leaking real infra details into a public workflow.
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+      - name: Build apps/api (web's RPC types depend on it)
+        run: pnpm --filter @repo/api build
+      - name: Build apps/web
+        run: pnpm --filter @repo/web build
