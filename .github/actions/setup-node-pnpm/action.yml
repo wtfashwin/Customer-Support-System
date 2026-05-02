@@ -1,0 +1,29 @@
+name: Setup pnpm + Node
+description: >
+  Sets up pnpm + Node, runs a strict frozen-lockfile install, and builds
+  the cross-cutting workspace packages (@repo/database client, shared-types).
+  Used by every TS workflow so install logic stays in one place.
+
+runs:
+  using: composite
+  steps:
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 10.28.0
+
+    - name: Setup Node 22
+      uses: actions/setup-node@v4
+      with:
+        node-version: "22"
+        cache: pnpm
+
+    - name: Install dependencies (frozen-lockfile)
+      shell: bash
+      run: pnpm install --frozen-lockfile
+
+    - name: Generate Prisma client + build workspace packages
+      shell: bash
+      run: |
+        pnpm --filter @repo/database db:generate
+        pnpm --filter @repo/shared-types build

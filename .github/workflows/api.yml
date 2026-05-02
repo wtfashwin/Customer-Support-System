@@ -7,47 +7,61 @@ on:
       - "apps/api/**"
       - "packages/**"
       - ".github/workflows/api.yml"
+      - ".github/actions/setup-node-pnpm/**"
   pull_request:
     paths:
       - "apps/api/**"
       - "packages/**"
       - ".github/workflows/api.yml"
+      - ".github/actions/setup-node-pnpm/**"
 
 permissions:
   contents: read
 
-jobs:
-  test:
-    name: vitest (rag.routes)
-    runs-on: ubuntu-latest
+concurrency:
+  group: api-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
+jobs:
+  lint:
+    name: eslint
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+      - name: Lint apps/api
+        run: pnpm --filter @repo/api lint
 
-      - uses: pnpm/action-setup@v4
+  typecheck:
+    name: tsc --noEmit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+      - name: Type-check apps/api
+        run: pnpm --filter @repo/api exec tsc --noEmit
+
+  test:
+    name: vitest + coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+      - name: Run vitest with coverage
+        run: pnpm --filter @repo/api exec vitest run --coverage
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        if: always()
         with:
-          version: 10.28.0
+          name: api-coverage
+          path: apps/api/coverage
+          if-no-files-found: ignore
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile=false
-
-      - name: Build workspace packages
-        run: |
-          pnpm --filter @repo/database build
-          pnpm --filter @repo/shared-types build
-
-      - name: Run RAG proxy tests
-        working-directory: apps/api
-        # Pre-existing failures live in chat.routes/agents/router tests on main;
-        # this CI job is scoped to verify the new RAG proxy until the rest is
-        # un-flaked. Run vitest directly so the file filter is respected.
-        run: pnpm exec vitest run src/__tests__/routes/rag.routes.test.ts
-
-      - name: Type-check Hono API
-        working-directory: apps/api
-        run: pnpm exec tsc --noEmit
+  build:
+    name: tsc build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+      - name: Build apps/api
+        run: pnpm --filter @repo/api build
