@@ -10,6 +10,7 @@ import { ragRoutes } from "./routes/rag.routes.js";
 import { agentRoutes as agentToolUseRoutes } from "./routes/agent.routes.js";
 import { errorMiddleware } from "./middleware/error.middleware.js";
 import { createCorsMiddleware } from "./middleware/cors.middleware.js";
+import { requestIdMiddleware } from "./middleware/request-id.middleware.js";
 
 // Global error handlers for better debugging in production
 process.on("uncaughtException", (err) => {
@@ -51,6 +52,7 @@ app.get("/", (c) => {
 const api = new Hono()
   .use("*", createCorsMiddleware())
   .use("*", honoLogger())
+  .use("*", requestIdMiddleware)
   .use("*", errorMiddleware)
   .route("/chat", chatRoutes)
   .route("/agents", agentRoutes)
