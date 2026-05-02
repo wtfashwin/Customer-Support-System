@@ -102,6 +102,43 @@ async function fetchWithRetry(
   );
 }
 
+/**
+ * Lightweight liveness probe against the AIML service's public `/health`
+ * endpoint. No retry, no auth, short timeout. Never throws — returns a
+ * structured result so callers like the readiness route can decide what
+ * to do with a degraded upstream.
+ */
+export interface AimlHealthResult {
+  healthy: boolean;
+  latency: number;
+  error?: string;
+}
+
+const PING_TIMEOUT_MS = 1500;
+
+export async function pingAiml(opts?: AimlClientOptions): Promise<AimlHealthResult> {
+  const url = `${getBaseUrl(opts)}/health`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), opts?.timeoutMs ?? PING_TIMEOUT_MS);
+  const start = Date.now();
+  try {
+    const resp = await fetch(url, { method: "GET", signal: controller.signal });
+    clearTimeout(timer);
+    const latency = Date.now() - start;
+    if (!resp.ok) {
+      return { healthy: false, latency, error: `upstream returned ${resp.status}` };
+    }
+    return { healthy: true, latency };
+  } catch (err) {
+    clearTimeout(timer);
+    return {
+      healthy: false,
+      latency: Date.now() - start,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
+
 export interface RagQueryBody {
   query: string;
   top_k?: number;

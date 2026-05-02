@@ -4,6 +4,7 @@ import { Hono } from "hono";
 
 import { createServiceLogger } from "../lib/logger.js";
 import { checkRedisHealth } from "../lib/redis.js";
+import { pingAiml } from "../services/aiml.client.js";
 
 const logger = createServiceLogger("health");
 
@@ -48,9 +49,25 @@ const healthRoutes = new Hono()
         status: redisHealthy ? "healthy" : "not_configured",
         latency: redisHealthy ? Date.now() - redisStart : undefined,
       };
+
+      // AIML upstream — informational, does not gate readiness. The API
+      // remains useful (chat, agents-plural, health) even when AIML is
+      // down; surfacing the status here lets operators see degradation
+      // at a glance without taking the whole service offline.
+      const aiml = await pingAiml();
+      if (!aiml.healthy) {
+        logger.warn(
+          { error: aiml.error, latency: aiml.latency },
+          "AIML upstream health check failed",
+        );
+      }
+      checks.aiml = {
+        status: aiml.healthy ? "healthy" : "unhealthy",
+        latency: aiml.latency,
+      };
     }
 
-    // Determine overall status
+    // Determine overall status — AIML is informational, only DB gates readiness.
     const isHealthy = checks.database.status === "healthy";
 
     return c.json(
