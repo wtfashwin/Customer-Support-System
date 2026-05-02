@@ -1,28 +1,11 @@
 name: web
 
+# Reusable workflow. Invoked from ci.yml with `uses:`.
 on:
-  push:
-    branches: [main]
-    paths:
-      - "apps/web/**"
-      - "apps/api/**"  # web's RPC client imports apps/api types
-      - "packages/**"
-      - ".github/workflows/web.yml"
-      - ".github/actions/setup-node-pnpm/**"
-  pull_request:
-    paths:
-      - "apps/web/**"
-      - "apps/api/**"
-      - "packages/**"
-      - ".github/workflows/web.yml"
-      - ".github/actions/setup-node-pnpm/**"
+  workflow_call:
 
 permissions:
   contents: read
-
-concurrency:
-  group: web-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   typecheck:

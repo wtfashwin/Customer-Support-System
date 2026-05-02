@@ -1,26 +1,13 @@
 name: api
 
+# Reusable workflow. Invoked from ci.yml with `uses:`. Concurrency,
+# triggers, and required-checks aggregation live in the caller so a
+# single `ci / ci-pass` status check can guard the branch.
 on:
-  push:
-    branches: [main]
-    paths:
-      - "apps/api/**"
-      - "packages/**"
-      - ".github/workflows/api.yml"
-      - ".github/actions/setup-node-pnpm/**"
-  pull_request:
-    paths:
-      - "apps/api/**"
-      - "packages/**"
-      - ".github/workflows/api.yml"
-      - ".github/actions/setup-node-pnpm/**"
+  workflow_call:
 
 permissions:
   contents: read
-
-concurrency:
-  group: api-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   lint:

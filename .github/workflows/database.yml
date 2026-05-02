@@ -1,24 +1,11 @@
 name: database
 
+# Reusable workflow. Invoked from ci.yml with `uses:`.
 on:
-  push:
-    branches: [main]
-    paths:
-      - "packages/database/**"
-      - ".github/workflows/database.yml"
-      - ".github/actions/setup-node-pnpm/**"
-  pull_request:
-    paths:
-      - "packages/database/**"
-      - ".github/workflows/database.yml"
-      - ".github/actions/setup-node-pnpm/**"
+  workflow_call:
 
 permissions:
   contents: read
-
-concurrency:
-  group: database-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   schema:
