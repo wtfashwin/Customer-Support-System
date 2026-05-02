@@ -1,0 +1,44 @@
+name: database
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/database/**"
+      - ".github/workflows/database.yml"
+      - ".github/actions/setup-node-pnpm/**"
+  pull_request:
+    paths:
+      - "packages/database/**"
+      - ".github/workflows/database.yml"
+      - ".github/actions/setup-node-pnpm/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: database-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  schema:
+    name: prisma validate + format --check
+    runs-on: ubuntu-latest
+    # Both prisma validate and format --check are read-only against the
+    # schema file — no database connection is opened — but the prisma CLI
+    # eagerly resolves env("DATABASE_URL") so we feed it a dummy value
+    # that's never dialled.
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci_db
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+
+      - name: Validate schema
+        run: pnpm --filter @repo/database db:validate
+
+      - name: Verify schema is formatted
+        run: pnpm --filter @repo/database db:format-check
+
+      - name: Build @repo/database
+        run: pnpm --filter @repo/database build
