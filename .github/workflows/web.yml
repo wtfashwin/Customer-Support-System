@@ -14,6 +14,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-node-pnpm
+      - name: Build apps/api (web's RPC types depend on it)
+        # web imports `AppType` from @repo/api, which resolves through
+        # the package's built dist/. Without this build, tsc errors
+        # with "Cannot find module '@repo/api'".
+        run: pnpm --filter @repo/api build
       - name: Type-check apps/web
         run: pnpm --filter @repo/web exec tsc --noEmit
 
