@@ -24,6 +24,10 @@ runs:
 
     - name: Generate Prisma client + build workspace packages
       shell: bash
+      # @repo/database resolves via its built `dist/index.js` (see its
+      # package.json `main`/`exports`), so the full build — not just
+      # `prisma generate` — must run before any downstream tsc / vitest /
+      # next build in CI.
       run: |
-        pnpm --filter @repo/database db:generate
+        pnpm --filter @repo/database build
         pnpm --filter @repo/shared-types build
