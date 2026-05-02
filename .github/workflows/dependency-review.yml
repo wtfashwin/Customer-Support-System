@@ -1,0 +1,33 @@
+name: dependency-review
+
+# Blocks PRs that introduce dependencies with known CVEs or licences
+# outside the allowlist. Reads only the GitHub Advisory Database — no
+# network calls to the dependency itself, so it's fast and safe to run
+# on every PR.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write  # so the action can comment a summary on the PR
+
+concurrency:
+  group: dependency-review-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    name: dep-review
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          # Common permissive licences. Tighten once the user surveys
+          # current transitive licences (`pnpm licenses list`).
+          allow-licenses: >-
+            MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC,
+            CC0-1.0, CC-BY-4.0, 0BSD, Unlicense, BlueOak-1.0.0,
+            Python-2.0, MPL-2.0
+          comment-summary-in-pr: on-failure
