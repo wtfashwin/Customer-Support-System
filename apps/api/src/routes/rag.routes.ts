@@ -1,6 +1,11 @@
 import { Hono } from "hono";
 
 import {
+  REQUEST_ID_HEADER,
+  requestIdMiddleware,
+  type RequestIdVariables,
+} from "../middleware/request-id.middleware.js";
+import {
   AimlServiceError,
   documentAnalyze,
   ragIngest,
@@ -8,11 +13,6 @@ import {
   type RagIngestBody,
   type RagQueryBody,
 } from "../services/aiml.client.js";
-import {
-  REQUEST_ID_HEADER,
-  requestIdMiddleware,
-  type RequestIdVariables,
-} from "../middleware/request-id.middleware.js";
 import { authHeader, envelope, getRequestId } from "../utils/request.js";
 
 const ragRoutes = new Hono<{ Variables: RequestIdVariables }>();

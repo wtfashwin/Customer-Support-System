@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
 import { Hono } from "hono";
+import { describe, it, expect } from "vitest";
 
 import {
   REQUEST_ID_HEADER,
