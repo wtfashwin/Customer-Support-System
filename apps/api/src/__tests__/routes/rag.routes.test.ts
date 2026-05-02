@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { Hono } from "hono";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import { ragRoutes } from "../../routes/rag.routes.js";
 import * as aimlClient from "../../services/aiml.client.js";

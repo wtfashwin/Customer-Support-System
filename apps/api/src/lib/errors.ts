@@ -64,7 +64,7 @@ export class ForbiddenError extends AppError {
 }
 
 export class RateLimitError extends AppError {
-  constructor(retryAfter?: number) {
+  constructor(_retryAfter?: number) {
     super("Too many requests. Please try again later.", 429, "RATE_LIMITED");
     this.name = "RateLimitError";
   }

@@ -56,6 +56,7 @@ agentRoutes.post("/run", async (c) => {
       },
     });
   } catch (err) {
+    c.header("x-request-id", rid);
     if (err instanceof AimlServiceError) {
       return c.json(envelope(err.code, err.message, err.requestId ?? rid), err.status as 400);
     }

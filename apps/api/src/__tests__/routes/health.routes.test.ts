@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Hono } from "hono";
+import { describe, it, expect, beforeEach } from "vitest";
+
 import { healthRoutes } from "../../routes/health.routes.js";
 
 describe("Health Routes", () => {
