@@ -1,15 +1,18 @@
-import { generateText, type CoreMessage } from "ai";
 import { createGroq } from "@ai-sdk/groq";
 import { type AgentType, parseAgentType } from "@repo/shared-types";
-import type { RoutingDecision, ChatMessage } from "../types/index.js";
-import { createServiceLogger } from "../lib/logger.js";
-import { streamService } from "./stream.service.js";
+import { generateText, type CoreMessage } from "ai";
+
 import {
   SupportAgent,
   OrderAgent,
   BillingAgent,
   type BaseAgent,
 } from "../agents/index.js";
+import { createServiceLogger } from "../lib/logger.js";
+import type { RoutingDecision, ChatMessage } from "../types/index.js";
+
+import { streamService } from "./stream.service.js";
+
 
 const logger = createServiceLogger("agent");
 

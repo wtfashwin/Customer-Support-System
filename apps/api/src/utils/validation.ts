@@ -1,5 +1,5 @@
-import { z } from "zod";
 import { AgentTypeSchema as SharedAgentTypeSchema } from "@repo/shared-types";
+import { z } from "zod";
 
 // Send message schema
 export const SendMessageSchema = z.object({

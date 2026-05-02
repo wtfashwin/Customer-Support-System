@@ -21,6 +21,8 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
+    "db:validate": "prisma validate",
+    "db:format-check": "prisma format --check",
     "clean": "rm -rf dist"
   },
   "dependencies": {

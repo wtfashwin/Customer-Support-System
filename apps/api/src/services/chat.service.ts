@@ -2,13 +2,14 @@ import {
   prisma,
   type Conversation,
   type Message,
-  type User,
 } from "@repo/database";
+
 import { NotFoundError, ForbiddenError } from "../lib/errors.js";
 import { createServiceLogger } from "../lib/logger.js";
-import { contextService } from "./context.service.js";
-import { agentService } from "./agent.service.js";
 import type { PaginationParams, PaginatedResponse } from "../types/index.js";
+
+import { agentService } from "./agent.service.js";
+import { contextService } from "./context.service.js";
 
 const logger = createServiceLogger("chat");
 

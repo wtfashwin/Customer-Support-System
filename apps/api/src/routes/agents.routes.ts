@@ -1,6 +1,7 @@
 /// <reference types="undici-types" />
-import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
+import { Hono } from "hono";
+
 import { agentsController } from "../controllers/agents.controller.js";
 import { AgentTypeSchema } from "../utils/validation.js";
 
