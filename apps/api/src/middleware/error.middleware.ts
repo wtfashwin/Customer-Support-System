@@ -2,6 +2,7 @@ import type { Context, Next } from "hono";
 
 import { AppError } from "../lib/errors.js";
 import { createServiceLogger } from "../lib/logger.js";
+import { getRequestId } from "../utils/request.js";
 
 const logger = createServiceLogger("error-handler");
 
@@ -13,6 +14,8 @@ type AppStatus = 400 | 401 | 403 | 404 | 409 | 429 | 500 | 502 | 503;
  * `app.onError` shape) so they emit identical responses.
  */
 function buildErrorResponse(error: unknown, c: Context): Response {
+  const requestId = getRequestId(c) || undefined;
+
   if (error instanceof AppError) {
     logger.warn(
       {
@@ -21,10 +24,15 @@ function buildErrorResponse(error: unknown, c: Context): Response {
         statusCode: error.statusCode,
         path: c.req.path,
         method: c.req.method,
+        requestId,
       },
       "Application error",
     );
-    return c.json(error.toJSON(), error.statusCode as AppStatus);
+    const json = error.toJSON();
+    return c.json(
+      { error: { ...json.error, requestId } },
+      error.statusCode as AppStatus,
+    );
   }
 
   const unexpected = error as Error;
@@ -34,6 +42,7 @@ function buildErrorResponse(error: unknown, c: Context): Response {
       stack: unexpected.stack,
       path: c.req.path,
       method: c.req.method,
+      requestId,
     },
     "Unexpected error",
   );
@@ -42,6 +51,7 @@ function buildErrorResponse(error: unknown, c: Context): Response {
       error: {
         code: "INTERNAL_ERROR",
         message: "An unexpected error occurred. Please try again later.",
+        requestId,
       },
     },
     500,

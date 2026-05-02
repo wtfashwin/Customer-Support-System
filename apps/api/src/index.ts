@@ -6,6 +6,7 @@ import { logger as honoLogger } from "hono/logger";
 
 import { createCorsMiddleware } from "./middleware/cors.middleware.js";
 import { errorMiddleware } from "./middleware/error.middleware.js";
+import { requestIdMiddleware } from "./middleware/request-id.middleware.js";
 import { agentRoutes as agentToolUseRoutes } from "./routes/agent.routes.js";
 import { agentRoutes } from "./routes/agents.routes.js";
 import { chatRoutes } from "./routes/chat.routes.js";
@@ -52,6 +53,7 @@ app.get("/", (c) => {
 const api = new Hono()
   .use("*", createCorsMiddleware())
   .use("*", honoLogger())
+  .use("*", requestIdMiddleware)
   .use("*", errorMiddleware)
   .route("/chat", chatRoutes)
   .route("/agents", agentRoutes)

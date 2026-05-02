@@ -1,6 +1,11 @@
 import { Hono } from "hono";
 
 import {
+  REQUEST_ID_HEADER,
+  requestIdMiddleware,
+  type RequestIdVariables,
+} from "../middleware/request-id.middleware.js";
+import {
   AimlServiceError,
   documentAnalyze,
   ragIngest,
@@ -8,39 +13,21 @@ import {
   type RagIngestBody,
   type RagQueryBody,
 } from "../services/aiml.client.js";
+import { authHeader, envelope, getRequestId } from "../utils/request.js";
 
-const ragRoutes = new Hono();
+const ragRoutes = new Hono<{ Variables: RequestIdVariables }>();
 
-type HonoCtx = { req: { header: (name: string) => string | undefined } };
-
-function authHeader(c: HonoCtx): string | undefined {
-  return c.req.header("authorization") ?? c.req.header("Authorization");
-}
-
-/**
- * Read inbound x-request-id; if absent, generate a fresh UUIDv4 so the
- * Python service still sees a stable id and the same id can be echoed
- * to our caller for log correlation.
- */
-function requestId(c: HonoCtx): string {
-  return c.req.header("x-request-id") ?? c.req.header("X-Request-Id") ?? crypto.randomUUID();
-}
-
-function envelope(code: string, message: string, rid?: string) {
-  return { error: { code, message, requestId: rid } };
-}
+ragRoutes.use("*", requestIdMiddleware);
 
 ragRoutes.post("/query", async (c) => {
-  const rid = requestId(c);
+  const rid = getRequestId(c);
   let body: RagQueryBody;
   try {
     body = (await c.req.json()) as RagQueryBody;
   } catch {
-    c.header("x-request-id", rid);
     return c.json(envelope("validation_failed", "invalid JSON body", rid), 400);
   }
   if (!body?.query || typeof body.query !== "string") {
-    c.header("x-request-id", rid);
     return c.json(envelope("validation_failed", "query must be a non-empty string", rid), 400);
   }
   try {
@@ -49,7 +36,6 @@ ragRoutes.post("/query", async (c) => {
       requestId: rid,
     });
     if (!upstream.body) {
-      c.header("x-request-id", rid);
       return c.json(envelope("upstream_error", "empty stream from aiml service", rid), 502);
     }
     return new Response(upstream.body, {
@@ -58,7 +44,7 @@ ragRoutes.post("/query", async (c) => {
         "Content-Type": upstream.headers.get("content-type") ?? "text/event-stream",
         "Cache-Control": "no-cache",
         "X-Accel-Buffering": "no",
-        "x-request-id": rid,
+        [REQUEST_ID_HEADER]: rid,
       },
     });
   } catch (err) {
@@ -74,8 +60,7 @@ ragRoutes.post("/query", async (c) => {
 });
 
 ragRoutes.post("/ingest", async (c) => {
-  const rid = requestId(c);
-  c.header("x-request-id", rid);
+  const rid = getRequestId(c);
   let body: RagIngestBody;
   try {
     body = (await c.req.json()) as RagIngestBody;
@@ -103,8 +88,7 @@ ragRoutes.post("/ingest", async (c) => {
 });
 
 ragRoutes.post("/document/analyze", async (c) => {
-  const rid = requestId(c);
-  c.header("x-request-id", rid);
+  const rid = getRequestId(c);
   const contentType = c.req.header("content-type") ?? "application/octet-stream";
   const buf = await c.req.arrayBuffer();
   try {
