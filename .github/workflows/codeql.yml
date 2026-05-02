@@ -1,0 +1,50 @@
+name: codeql
+
+# SAST across JS/TS and Python. Runs on PRs (incremental) and weekly
+# on main (full re-scan to catch new advisories vs. unchanged code).
+# Each language is its own job in a matrix so failures are surfaced
+# per-ecosystem and one slow scan can't bottleneck the other.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Mondays 06:00 UTC — picks up new CodeQL queries from the upstream
+    # database without spamming weekday CI.
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+  security-events: write   # required to upload SARIF results
+  actions: read            # required for private repo job lookup
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  analyze:
+    name: analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript-typescript, python]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-and-quality
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
