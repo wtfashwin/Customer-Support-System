@@ -1,6 +1,5 @@
 /// <reference types="undici-types" />
 import type { AgentType } from "@repo/shared-types";
-import type { Context } from "hono";
 
 import { NotFoundError } from "../lib/errors.js";
 import { agentService } from "../services/agent.service.js";

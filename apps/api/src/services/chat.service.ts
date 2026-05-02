@@ -2,7 +2,6 @@ import {
   prisma,
   type Conversation,
   type Message,
-  type User,
 } from "@repo/database";
 
 import { NotFoundError, ForbiddenError } from "../lib/errors.js";
