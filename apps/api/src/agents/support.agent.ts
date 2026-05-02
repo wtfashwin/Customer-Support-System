@@ -1,4 +1,5 @@
 import { prisma } from "@repo/database";
+
 import { BaseAgent } from "./base.agent.js";
 
 export class SupportAgent extends BaseAgent {
@@ -156,7 +157,7 @@ Remember: Your goal is to resolve issues efficiently while ensuring customer sat
           description: "Priority level: low, medium, high",
         },
       },
-      execute: async (params, userId) => {
+      execute: async (params, _userId) => {
         const { reason, priority } = params as {
           reason: string;
           priority: string;

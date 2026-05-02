@@ -1,11 +1,12 @@
-import Groq from "groq-sdk";
 import { prisma, type Message } from "@repo/database";
+import Groq from "groq-sdk";
+
+import { createServiceLogger } from "../lib/logger.js";
 import type {
   ChatMessage,
   ConversationContext,
   ExtractedEntities,
 } from "../types/index.js";
-import { createServiceLogger } from "../lib/logger.js";
 
 const logger = createServiceLogger("context");
 

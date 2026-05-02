@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { Hono } from "hono";
 import { prisma } from "@repo/database";
+import { Hono } from "hono";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+
 import { healthRoutes } from "../../routes/health.routes.js";
 
 describe("Health Routes", () => {

@@ -1,0 +1,38 @@
+name: web
+
+# Reusable workflow. Invoked from ci.yml with `uses:`.
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  typecheck:
+    name: tsc --noEmit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+      - name: Build apps/api (web's RPC types depend on it)
+        # web imports `AppType` from @repo/api, which resolves through
+        # the package's built dist/. Without this build, tsc errors
+        # with "Cannot find module '@repo/api'".
+        run: pnpm --filter @repo/api build
+      - name: Type-check apps/web
+        run: pnpm --filter @repo/web exec tsc --noEmit
+
+  build:
+    name: next build
+    runs-on: ubuntu-latest
+    env:
+      # Public URL is read at build time; dummy value keeps next build
+      # happy without leaking real infra details into a public workflow.
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+      - name: Build apps/api (web's RPC types depend on it)
+        run: pnpm --filter @repo/api build
+      - name: Build apps/web
+        run: pnpm --filter @repo/web build

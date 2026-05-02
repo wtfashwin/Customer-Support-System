@@ -1,4 +1,5 @@
 import { prisma } from "@repo/database";
+
 import { BaseAgent } from "./base.agent.js";
 
 export class BillingAgent extends BaseAgent {
@@ -266,14 +267,10 @@ Remember: Handle financial information with care. Refunds require verification o
           description: "The desired new payment method",
         },
       },
-      execute: async (params, userId) => {
-        const { currentMethod, newMethod } = params as {
-          currentMethod: string;
-          newMethod: string;
-        };
-
-        // For security, we don't actually update payment methods via chat
-        // Instead, we provide instructions for the secure portal
+      execute: async (_params, _userId) => {
+        // For security, we don't actually update payment methods via chat.
+        // The destructured currentMethod/newMethod parameters are intentionally
+        // unused — we always return the secure-portal instructions below.
         return {
           canUpdateViaChat: false,
           message:

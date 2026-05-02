@@ -1,15 +1,17 @@
 import "dotenv/config";
-import { Hono } from "hono";
 import { serve } from "@hono/node-server";
-import { logger as honoLogger } from "hono/logger";
 import { prisma } from "@repo/database";
-import { chatRoutes } from "./routes/chat.routes.js";
+import { Hono } from "hono";
+import { logger as honoLogger } from "hono/logger";
+
+import { createCorsMiddleware } from "./middleware/cors.middleware.js";
+import { errorMiddleware } from "./middleware/error.middleware.js";
+import { requestIdMiddleware } from "./middleware/request-id.middleware.js";
+import { agentRoutes as agentToolUseRoutes } from "./routes/agent.routes.js";
 import { agentRoutes } from "./routes/agents.routes.js";
+import { chatRoutes } from "./routes/chat.routes.js";
 import { healthRoutes } from "./routes/health.routes.js";
 import { ragRoutes } from "./routes/rag.routes.js";
-import { agentRoutes as agentToolUseRoutes } from "./routes/agent.routes.js";
-import { errorMiddleware } from "./middleware/error.middleware.js";
-import { createCorsMiddleware } from "./middleware/cors.middleware.js";
 
 // Global error handlers for better debugging in production
 process.on("uncaughtException", (err) => {
@@ -51,6 +53,7 @@ app.get("/", (c) => {
 const api = new Hono()
   .use("*", createCorsMiddleware())
   .use("*", honoLogger())
+  .use("*", requestIdMiddleware)
   .use("*", errorMiddleware)
   .route("/chat", chatRoutes)
   .route("/agents", agentRoutes)

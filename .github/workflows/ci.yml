@@ -1,0 +1,56 @@
+name: ci
+
+# Top-level orchestrator for the TypeScript monorepo. Calls the per-app
+# reusable workflows (api.yml / web.yml / database.yml) and produces a
+# single `ci / ci-pass` status check that branch protection can require.
+# Adding a new TS workflow later means one new `uses:` line in this file
+# plus one new entry in `ci-pass.needs` — no GitHub branch-protection
+# UI dance.
+#
+# The Python service (apps/aiml-service) keeps its own workflow because
+# its toolchain is unrelated to pnpm/Node; branch protection requires
+# `aiml-service / pytest + coverage` separately.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  api:
+    uses: ./.github/workflows/api.yml
+
+  web:
+    uses: ./.github/workflows/web.yml
+
+  database:
+    uses: ./.github/workflows/database.yml
+
+  ci-pass:
+    name: ci-pass
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [api, web, database]
+    steps:
+      - name: Verify all required jobs succeeded
+        # `needs.<job>.result` is one of: success, failure, cancelled, skipped.
+        # Reject anything that isn't a clean success so cancelled / skipped
+        # upstream runs cannot satisfy the gate.
+        run: |
+          status_api='${{ needs.api.result }}'
+          status_web='${{ needs.web.result }}'
+          status_database='${{ needs.database.result }}'
+          echo "api=$status_api web=$status_web database=$status_database"
+          if [[ "$status_api" != 'success' || "$status_web" != 'success' || "$status_database" != 'success' ]]; then
+            echo "::error::One or more required jobs did not succeed"
+            exit 1
+          fi
+          echo "All required jobs succeeded."

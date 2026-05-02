@@ -1,5 +1,6 @@
-import type { Context, Next } from "hono";
 import { prisma } from "@repo/database";
+import type { Context, Next } from "hono";
+
 import { UnauthorizedError, NotFoundError } from "../lib/errors.js";
 import { createServiceLogger } from "../lib/logger.js";
 

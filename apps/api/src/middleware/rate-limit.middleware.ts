@@ -1,7 +1,8 @@
 import type { Context, Next } from "hono";
-import { getRateLimiter } from "../lib/redis.js";
+
 import { RateLimitError } from "../lib/errors.js";
 import { createServiceLogger } from "../lib/logger.js";
+import { getRateLimiter } from "../lib/redis.js";
 
 const logger = createServiceLogger("rate-limiter");
 
