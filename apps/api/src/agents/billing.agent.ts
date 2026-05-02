@@ -1,4 +1,5 @@
 import { prisma } from "@repo/database";
+
 import { BaseAgent } from "./base.agent.js";
 
 export class BillingAgent extends BaseAgent {

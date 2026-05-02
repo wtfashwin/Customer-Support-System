@@ -1,5 +1,6 @@
-import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+
 import { createServiceLogger } from "./logger.js";
 
 const logger = createServiceLogger("redis");

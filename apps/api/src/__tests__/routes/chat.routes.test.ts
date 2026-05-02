@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { Hono } from "hono";
 import { prisma } from "@repo/database";
+import { Hono } from "hono";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Simple test for route structure
 describe("Chat Routes", () => {

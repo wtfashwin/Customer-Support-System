@@ -1,6 +1,7 @@
 /// <reference types="undici-types" />
-import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
+import { Hono } from "hono";
+
 import { chatController } from "../controllers/chat.controller.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { errorHandler } from "../middleware/error.middleware.js";

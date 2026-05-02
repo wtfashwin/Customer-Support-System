@@ -1,10 +1,11 @@
-import { streamText, type CoreMessage, type CoreTool } from "ai";
 import { createGroq } from "@ai-sdk/groq";
 import { prisma } from "@repo/database";
 import type { AgentType } from "@repo/shared-types";
-import type { ToolCallResult } from "../types/index.js";
-import { createServiceLogger } from "../lib/logger.js";
+import { streamText, type CoreMessage, type CoreTool } from "ai";
+
 import { AIServiceError } from "../lib/errors.js";
+import { createServiceLogger } from "../lib/logger.js";
+import type { ToolCallResult } from "../types/index.js";
 import { formatStreamEvent } from "../utils/response.js";
 
 const logger = createServiceLogger("stream");
