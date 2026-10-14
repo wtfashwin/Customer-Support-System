@@ -1,6 +1,7 @@
+import { type AgentType, parseAgentTypeWithDefault } from "@repo/shared-types";
+
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
-import { type AgentType, parseAgentTypeWithDefault } from "@repo/shared-types";
 
 interface AgentBadgeProps {
     type: AgentType | string;

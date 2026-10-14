@@ -29,3 +29,39 @@ jobs:
 
       - name: Build @repo/database
         run: pnpm --filter @repo/database build
+
+  shared-setup:
+    name: fresh + repeated setup (PostgreSQL 16)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
+      DATABASE_SETUP_ADMIN_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
+      GROQ_API_KEY: ""
+      OPENAI_API_KEY: ""
+      AZURE_OPENAI_API_KEY: ""
+      OTEL_EXPORTER_OTLP_ENDPOINT: ""
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+      - uses: astral-sh/setup-uv@v3
+      - name: Set up Python 3.12 and locked dependencies
+        run: |
+          uv python install 3.12
+          uv sync --project apps/aiml-service --frozen
+      - name: Verify both setup orders and preserve existing rows
+        run: uv run --project apps/aiml-service --frozen python scripts/test_database_setup.py

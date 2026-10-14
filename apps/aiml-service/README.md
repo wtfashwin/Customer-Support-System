@@ -18,12 +18,15 @@ intelligence, semantic search, agent routing, and live handoff. See the
 ```bash
 cd apps/aiml-service
 cp .env.example .env  # fill in keys
-uv sync
-uv run alembic upgrade head
-uv run uvicorn app.main:app --reload --port 8000
+export DATABASE_URL='postgresql://USER:PASSWORD@localhost:5432/support'
+uv sync --frozen
+uv run --frozen alembic upgrade head
+uv run --frozen uvicorn app.main:app --reload --port 8000
 ```
 
-Smoke test:
+Use a fresh development database with pgvector. Alembic owns the Python tables in `public`; the JavaScript application owns `support_app`. Initialize the JavaScript tables with `pnpm db:migrate:deploy` from the repository root when using order/payment lookup tools. These two migration steps can run in either order. Existing databases with JavaScript tables in `public` require a separately reviewed migration; these commands do not move data.
+
+Smoke test (`/ready` calls the provider when a key is configured):
 
 ```bash
 curl -s localhost:8000/health
@@ -51,7 +54,7 @@ curl -s localhost:8000/v1/conversations/<convo-uuid> \
 ```bash
 uv run pytest                 # unit + mocked integration
 uv run pytest -m integration  # requires Postgres (testcontainers)
-uv run pytest --cov=app       # coverage gate ≥ 80%
+uv run pytest --cov=app --cov-fail-under=82
 ```
 
 ## Environment

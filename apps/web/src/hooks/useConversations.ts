@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
-import { useChatStore } from "@/stores/chatStore";
+import { useState, useCallback } from "react";
+
 import { chatApi } from "@/lib/api-client";
+import { useChatStore } from "@/stores/chatStore";
 
 export function useConversations() {
     const { userId, conversations, addConversation, setMessages, deleteConversation: deleteConversationStore } = useChatStore();

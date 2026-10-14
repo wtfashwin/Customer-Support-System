@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { ChatInterface } from "@/components/chat/ChatInterface";
-import { useChatStore } from "@/stores/chatStore";
 import { nanoid } from "nanoid";
+import { useEffect } from "react";
+
+import { ChatInterface } from "@/components/chat/ChatInterface";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { useChatStore } from "@/stores/chatStore";
 
 export default function ChatPage() {
     const { userId, setUserId } = useChatStore();
