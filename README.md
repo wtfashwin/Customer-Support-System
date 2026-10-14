@@ -1,236 +1,102 @@
-# Customer Support System - Complete Monorepo
+# Customer Support System
 
-A production-ready AI-powered customer support system with multi-agent architecture, real-time streaming, and modern UI.
+A customer support application for streaming conversations with support, order, and billing agents, plus a separate service for document search and tool-based workflows.
 
-## 🏗️ Architecture
+## What it does
 
-This is a **pnpm workspace monorepo** with:
+- Displays streaming chat responses and tool activity in a Next.js interface.
+- Routes conversations through a Hono API and stores conversation history in PostgreSQL.
+- Uses specialized support, order, and billing agents with Groq models.
+- Provides a FastAPI service for retrieval-augmented generation, document ingestion, embeddings, conversation memory, and agent tool use.
+- Includes database-backed order/payment lookup tools and optional Azure document/search integrations.
 
-- **Backend**: Hono.js API with Groq AI integration
-- **Frontend**: Next.js 15 with streaming chat interface
-- **Database**: PostgreSQL with Prisma ORM
-- **Deployment**: Railway (API) + Vercel (Frontend)
+## Project status
 
-## 📦 Project Structure
+This is an implemented monorepo with test suites and deployment configuration. The order and payment models are demo data; external commerce and payment systems are not connected. The JavaScript chat flow and Python agent workflow are separate surfaces with different configuration and authentication requirements.
 
-```
-.
-├── apps/
-│   ├── api/          # Hono backend with multi-agent system
-│   └── web/          # Next.js frontend
-├── packages/
-│   └── database/     # Shared Prisma schema & client
-├── .claude/          # Development specifications
-├── turbo.json        # Turborepo configuration
-└── pnpm-workspace.yaml
-```
+## Built with
 
-## 🚀 Quick Start
+Next.js 15, React 19, TypeScript, Hono, Prisma, PostgreSQL, pnpm, Turborepo, Python 3.12, FastAPI, SQLAlchemy/Alembic, pgvector, LangChain, LlamaIndex, and LangGraph.
 
-### Prerequisites
+## Start the web and API
 
-- Node.js 18+ and pnpm
-- PostgreSQL database (or use Neon)
-- Groq API key ([get one here](https://console.groq.com))
+Requirements: Node.js 22 or later, pnpm 10.28.0, PostgreSQL, and a Groq API key. Redis/Upstash configuration is optional for the JavaScript rate-limiting path.
 
-### 1. Install Dependencies
+From the repository root:
 
 ```bash
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env.local
+```
+
+Set `DATABASE_URL` and `GROQ_API_KEY` in `apps/api/.env`. Keep `NEXT_PUBLIC_API_URL=http://localhost:3001/api` in the web environment for local use. Use a plain PostgreSQL URL without the Prisma-only `?schema=public` parameter when sharing the database with Python. Export the same URL in your shell so Prisma commands can read it:
+
+```bash
+export DATABASE_URL='postgresql://USER:PASSWORD@localhost:5432/support'
 pnpm install
-```
-
-### 2. Setup Environment Variables
-
-**API (`apps/api/.env`)**:
-```bash
-DATABASE_URL="postgresql://..."
-GROQ_API_KEY="gsk_..."
-UPSTASH_REDIS_REST_URL="https://..."  # Optional
-UPSTASH_REDIS_REST_TOKEN="..."        # Optional
-FRONTEND_URL="http://localhost:3000"
-PORT=3001
-NODE_ENV="development"
-```
-
-**Frontend (`apps/web/.env.local`)**:
-```bash
-NEXT_PUBLIC_API_URL="http://localhost:3001/api"
-```
-
-### 3. Setup Database
-
-```bash
-# Generate Prisma client
-pnpm --filter=@repo/database db:generate
-
-# Push schema to database
-pnpm --filter=@repo/database db:push
-
-# Seed with sample data
-pnpm --filter=@repo/database db:seed
-```
-
-### 4. Run Development Servers
-
-```bash
-# Run both API and web concurrently
-pnpm dev
-
-# Or run individually:
-pnpm --filter=@repo/api dev
-pnpm --filter=@repo/web dev
-```
-
-- **Frontend**: http://localhost:3000
-- **API**: http://localhost:3001
-- **API Health**: http://localhost:3001/api/health
-
-## 🎯 Features
-
-### Backend
-- ✅ **Multi-Agent System**: Support, Order, and Billing agents
-- ✅ **Groq AI Integration**: Fast LLM inference with llama-3.3-70b
-- ✅ **Real-time Streaming**: Server-Sent Events for live responses
-- ✅ **Tool Calling**: Agents can query database and execute actions
-- ✅ **Context Management**: Automatic conversation summarization
-- ✅ **Type-Safe API**: Hono RPC for full type inference
-- ✅ **Rate Limiting**: Upstash Redis integration
-- ✅ **Comprehensive Tests**: Unit and integration tests
-
-### Frontend
-- ✅ **Modern UI**: Dark-first design with Tailwind CSS
-- ✅ **Smooth Animations**: Framer Motion for delightful UX
-- ✅ **Real-time Chat**: Streaming responses with visual feedback
-- ✅ **State Management**: Zustand with localStorage persistence
-- ✅ **Responsive Design**: Works on desktop and mobile
-- ✅ **Type-Safe Client**: Hono RPC client with auto-completion
-- ✅ **Error Handling**: Graceful error states and recovery
-
-## 🧪 Testing
-
-```bash
-# Run all tests
-pnpm test
-
-# Run API tests only
-pnpm --filter=@repo/api test
-```
-
-## 📦 Building for Production
-
-```bash
-# Build all packages
+pnpm db:generate
+pnpm db:push
+pnpm db:seed
 pnpm build
-
-# Build specific package
-pnpm --filter=@repo/api build
-pnpm --filter=@repo/web build
+pnpm dev
 ```
 
-## 🚀 Deployment
+Use a disposable development database for schema push and sample seeding. The initial build creates the workspace packages consumed by the API. Open `http://localhost:3000`; the API defaults to port 3001. `GET /health` is liveness, while `GET /api/health/ready` checks database readiness.
 
-### Backend (Railway)
+Start a conversation in the chat interface and ask about one of the sample orders or invoices from the database seed.
 
-1. Connect your Railway project
-2. Set environment variables
-3. Deploy:
-   ```bash
-   # Railway will use railway.toml configuration
-   railway up
-   ```
+## Start the Python service
 
-### Frontend (Vercel)
-
-1. Connect your Vercel project
-2. Set `NEXT_PUBLIC_API_URL` to your Railway API URL
-3. Deploy:
-   ```bash
-   vercel --prod
-   ```
-
-## 📚 Documentation
-
-- [Backend Specification](.claude/backend_developer.md)
-- [Frontend Specification](FRONTEND_SPEC.md)
-- [API Documentation](apps/api/README.md)
-- [Frontend Documentation](apps/web/README.md)
-
-## 🛠️ Tech Stack
-
-### Backend
-- **Runtime**: Node.js with Hono.js
-- **AI**: Groq SDK (llama-3.3-70b-versatile)
-- **Database**: PostgreSQL + Prisma
-- **Caching**: Upstash Redis
-- **Validation**: Zod
-- **Testing**: Vitest
-
-### Frontend
-- **Framework**: Next.js 15 (App Router)
-- **Styling**: Tailwind CSS
-- **State**: Zustand
-- **Animations**: Framer Motion
-- **Type Safety**: TypeScript + Hono RPC
-
-## 🤖 AIML Service
-
-A Python 3.12 FastAPI service at `apps/aiml-service` adds RAG, document
-intelligence, semantic search, agent routing, **agentic workflows with
-tool use** (`/v1/agents/run`), conversation memory, and live handoff.
-Hono proxies under `/api/rag/*` and `/api/agent/*` after attaching the
-Auth0 JWT.
-
-### Quick start
+This service is started separately from `pnpm dev`. It requires Python 3.12, uv, PostgreSQL with pgvector support, Redis, an OpenAI or Azure OpenAI configuration, and Auth0 configuration for authenticated routes.
 
 ```bash
 cd apps/aiml-service
-cp .env.example .env  # set OPENAI_API_KEY, AUTH0_*, DATABASE_URL
+cp .env.example .env
+export DATABASE_URL='postgresql://USER:PASSWORD@localhost:5432/support'
 uv sync
 uv run alembic upgrade head
 uv run uvicorn app.main:app --reload --port 8000
 ```
 
-### Smoke test through Hono
+Fill in the service environment before running migrations or requests. Shell environment variables override `.env`; keep the exported URL compatible with SQLAlchemy and asyncpg. Use the same underlying database as the TypeScript application when exercising order/payment lookup tools. Alembic manages the vector column that Prisma does not model. Set `AIML_SERVICE_URL=http://localhost:8000` in the API environment to use the Hono proxy routes.
+
+See [the AIML service guide](apps/aiml-service/README.md) and [API contract](docs/AIML_API_CONTRACT.md) for bearer-token scopes, ingestion, RAG queries, and streamed `/api/agent/run` requests. Azure Document Intelligence and Azure AI Search need their own configured accounts; unavailable optional integrations return configuration errors. Model and Azure service usage may incur charges.
+
+## Structure
+
+| Path | Purpose |
+| --- | --- |
+| `apps/web/` | Chat interface and local UI state |
+| `apps/api/` | Hono API, chat agents, and Python-service proxies |
+| `apps/aiml-service/` | FastAPI document, RAG, and agent workflows |
+| `packages/database/` | Prisma schema, client, and sample data |
+| `packages/shared-types/` | Shared TypeScript types |
+| `docs/AIML_API_CONTRACT.md` | Python endpoints and proxy contract |
+
+## Available checks
 
 ```bash
-# AIML service direct
-curl -s localhost:8000/health
-curl -s -X POST localhost:8000/v1/embed \
-  -H "Authorization: Bearer $AUTH0_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"texts":["hello world"]}'
-
-# Hono proxy (forwards Authorization)
-curl -N -X POST localhost:3001/api/rag/query \
-  -H "Authorization: Bearer $AUTH0_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"query":"What is your refund policy?","top_k":3}'
-
-# Agentic flow with tool use — streams tool_call/tool_result/token/done
-curl -N -X POST localhost:3001/api/agent/run \
-  -H "Authorization: Bearer $AUTH0_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"message":"Where is order ORD-1042?","topK":4}'
+pnpm test
+pnpm lint
+pnpm build
+pnpm --filter @repo/api test
 ```
 
-### Tests
+For Python checks, run from `apps/aiml-service`:
 
 ```bash
-cd apps/aiml-service
-uv run pytest --cov=app           # 69 tests, 86% coverage, gate at 82%
+uv run pytest
+uv run pytest -m integration
+uv run pytest --cov=app
 uv run python tests/eval/run_eval.py --mode dry --threshold 0.6
 ```
 
-### Full surface
+The Python suite has integration and credential-dependent paths. The dry evaluation is a local harness check, not a measurement of a live model's quality. Root pnpm commands cover workspace packages and do not run the Python suite.
 
-See [docs/AIML_API_CONTRACT.md](docs/AIML_API_CONTRACT.md) for the
-authoritative contract — endpoints, scopes, error envelope, SSE event
-names, and Hono proxy mapping.
+## Deployment and limits
 
-## 📝 License
+`railway.toml` defines the API build/start command and `/health` probe. `vercel.json` configures the web deployment. Provision the database, provider credentials, and Python service separately before using those configurations. A liveness response alone does not establish database or provider readiness.
 
-MIT
+## License
 
-## 🤝 Contributing
-
-This is a complete, production-ready system. Feel free to fork and customize for your needs!
+The previous README states MIT, but no license file is included. The owner needs to clarify and add the intended license.
