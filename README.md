@@ -18,6 +18,10 @@ This is an implemented monorepo with test suites and deployment configuration. T
 
 Next.js 15, React 19, TypeScript, Hono, Prisma, PostgreSQL, pnpm, Turborepo, Python 3.12, FastAPI, SQLAlchemy/Alembic, pgvector, LangChain, LlamaIndex, and LangGraph.
 
+## How it works
+
+The web app sends chat requests to the Hono API, which runs the support, order, and billing agents and stores conversations through Prisma. The Python service has its own document-ingestion and retrieval workflow, database migrations, and authorization. Hono proxy routes can forward requests to that service when `AIML_SERVICE_URL` is configured.
+
 ## Start the web and API
 
 Requirements: Node.js 22 or later, pnpm 10.28.0, PostgreSQL, and a Groq API key. Redis/Upstash configuration is optional for the JavaScript rate-limiting path.
