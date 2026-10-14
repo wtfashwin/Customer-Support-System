@@ -1,8 +1,9 @@
+import { nanoid } from "nanoid";
 import { useState, useCallback } from "react";
-import { useChatStore } from "@/stores/chatStore";
+
 import { chatApi } from "@/lib/api-client";
 import { parseSSEStream } from "@/lib/streaming";
-import { nanoid } from "nanoid";
+import { useChatStore } from "@/stores/chatStore";
 
 export function useChat() {
     const {
@@ -50,8 +51,7 @@ export function useChat() {
 
                 const stream = await chatApi.sendMessage(
                     activeConversationId,
-                    content,
-                    userId
+                    content
                 );
 
                 if (!stream) {
@@ -101,7 +101,7 @@ export function useChat() {
                             );
                             break;
 
-                        case "done":
+                        case "done": {
                             messageId = event.data.messageId;
                             // Add assistant message
                             const assistantMessage = {
@@ -116,6 +116,7 @@ export function useChat() {
                             clearStreamingMessage();
                             resetAIStatus();
                             break;
+                        }
 
                         case "error":
                             setError(event.data.message);

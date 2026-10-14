@@ -48,7 +48,7 @@ class LookupOrderTool(Tool[LookupOrderArgs, LookupOrderResult]):
                         """
                         SELECT "orderNumber", status, items, "trackingId", carrier,
                                "deliveryDate", "totalAmount"
-                        FROM "Order"
+                        FROM support_app."Order"
                         WHERE "orderNumber" = :n
                         """
                     ),

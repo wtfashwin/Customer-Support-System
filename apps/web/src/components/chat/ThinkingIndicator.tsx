@@ -1,8 +1,9 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useChatStore, type AIStatus, type ToolCall } from "@/stores/chatStore";
+
 import { getStatusMessage, formatToolName } from "@/lib/streaming";
+import { useChatStore, type AIStatus, type ToolCall } from "@/stores/chatStore";
 
 const statusIcons: Record<AIStatus, string> = {
     idle: "",

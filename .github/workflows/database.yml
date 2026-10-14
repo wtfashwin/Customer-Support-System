@@ -29,3 +29,62 @@ jobs:
 
       - name: Build @repo/database
         run: pnpm --filter @repo/database build
+
+  shared-setup:
+    name: fresh + repeated setup (PostgreSQL 16)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GROQ_API_KEY: ""
+      OPENAI_API_KEY: ""
+      AZURE_OPENAI_API_KEY: ""
+      OTEL_EXPORTER_OTLP_ENDPOINT: ""
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start disposable PostgreSQL 16
+        shell: bash
+        run: |
+          set -euo pipefail
+          postgres_password="$(openssl rand -hex 32)"
+          echo "::add-mask::$postgres_password"
+          container_name="css-setup-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          printf 'CSS_SETUP_CONTAINER=%s\n' "$container_name" >> "$GITHUB_ENV"
+          export POSTGRES_PASSWORD="$postgres_password"
+          docker run --detach --name "$container_name" \
+            --label "codex.task=customer-support-ci-setup" \
+            --publish 127.0.0.1:5432:5432 \
+            --env POSTGRES_USER=postgres \
+            --env POSTGRES_PASSWORD \
+            --env POSTGRES_DB=postgres \
+            pgvector/pgvector:pg16 >/dev/null
+          printf 'DATABASE_URL=postgresql://postgres:%s@127.0.0.1:5432/postgres\n' "$postgres_password" >> "$GITHUB_ENV"
+          printf 'DATABASE_SETUP_ADMIN_URL=postgresql://postgres:%s@127.0.0.1:5432/postgres\n' "$postgres_password" >> "$GITHUB_ENV"
+          unset POSTGRES_PASSWORD postgres_password
+          ready=false
+          for attempt in {1..30}; do
+            if docker exec "$container_name" pg_isready -h 127.0.0.1 -U postgres -d postgres -t 2 >/dev/null 2>&1; then
+              ready=true
+              break
+            fi
+            sleep 2
+          done
+          if [[ "$ready" != true ]]; then
+            echo "::error::Disposable PostgreSQL readiness timed out"
+            exit 1
+          fi
+      - uses: ./.github/actions/setup-node-pnpm
+      - uses: astral-sh/setup-uv@v3
+      - name: Set up Python 3.12 and locked dependencies
+        run: |
+          uv python install 3.12
+          uv sync --project apps/aiml-service --frozen
+      - name: Verify both setup orders and preserve existing rows
+        run: uv run --project apps/aiml-service --frozen python scripts/test_database_setup.py
+      - name: Remove disposable PostgreSQL
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -n "${CSS_SETUP_CONTAINER:-}" ]]; then
+            docker rm --force --volumes "$CSS_SETUP_CONTAINER" >/dev/null
+          fi

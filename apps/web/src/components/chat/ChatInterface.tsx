@@ -1,13 +1,16 @@
 "use client";
 
 import { useEffect } from "react";
-import { useChatStore } from "@/stores/chatStore";
+
 import { useChat } from "@/hooks/useChat";
 import { useConversations } from "@/hooks/useConversations";
-import { MessageList } from "./MessageList";
-import { MessageInput } from "./MessageInput";
-import { ThinkingIndicator } from "./ThinkingIndicator";
 import { getStatusMessage } from "@/lib/streaming";
+import { useChatStore } from "@/stores/chatStore";
+
+import { MessageInput } from "./MessageInput";
+import { MessageList } from "./MessageList";
+import { ThinkingIndicator } from "./ThinkingIndicator";
+
 
 const agentBadgeColors: Record<string, string> = {
     support: "bg-green-500/10 text-green-400",
@@ -17,7 +20,6 @@ const agentBadgeColors: Record<string, string> = {
 
 export function ChatInterface() {
     const {
-        userId,
         activeConversationId,
         messages,
         streamingMessage,
@@ -28,7 +30,7 @@ export function ChatInterface() {
         currentTool,
     } = useChatStore();
 
-    const { sendMessage, error, clearError } = useChat();
+    const { sendMessage, error } = useChat();
     const { loadMessages, createConversation } = useConversations();
 
     // Load messages when conversation changes

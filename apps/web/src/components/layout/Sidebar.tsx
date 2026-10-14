@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
-import { useChatStore } from "@/stores/chatStore";
-import { useConversations } from "@/hooks/useConversations";
 import { Button } from "@/components/ui/Button";
+import { useConversations } from "@/hooks/useConversations";
 import { formatRelativeTime } from "@/lib/utils";
+import { useChatStore } from "@/stores/chatStore";
 
 export function Sidebar() {
     const { conversations, activeConversationId, setActiveConversation } = useChatStore();

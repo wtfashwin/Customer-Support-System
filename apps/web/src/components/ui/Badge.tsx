@@ -1,6 +1,6 @@
-import { HTMLAttributes } from "react";
-import { cn, getAgentColor } from "@/lib/utils";
 import { type AgentType } from "@repo/shared-types";
+
+import { cn, getAgentColor } from "@/lib/utils";
 
 export interface BadgeProps {
     children: React.ReactNode;

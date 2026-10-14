@@ -41,7 +41,7 @@ class LookupPaymentTool(Tool[LookupPaymentArgs, LookupPaymentResult]):
                         """
                         SELECT "invoiceNumber", amount, status, method,
                                "refundStatus", "refundAmount"
-                        FROM "Payment"
+                        FROM support_app."Payment"
                         WHERE "invoiceNumber" = :n
                         """
                     ),
