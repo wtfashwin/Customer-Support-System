@@ -1,6 +1,6 @@
-import { hc } from "hono/client";
 import type { AppType } from "@repo/api";
 import { type AgentType } from "@repo/shared-types";
+import { hc } from "hono/client";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 
@@ -16,7 +16,7 @@ export const chatApi = {
         return res.json();
     },
 
-    async sendMessage(conversationId: string, message: string, userId: string) {
+    async sendMessage(conversationId: string, message: string) {
         const res = await apiClient.chat.conversations[":id"].messages.$post({
             param: { id: conversationId },
             json: { content: message },

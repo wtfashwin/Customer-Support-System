@@ -1,6 +1,7 @@
-import { HTMLAttributes } from "react";
-import { cn } from "@/lib/utils";
 import { type AgentType } from "@repo/shared-types";
+import { HTMLAttributes } from "react";
+
+import { cn } from "@/lib/utils";
 
 export interface AvatarProps extends HTMLAttributes<HTMLDivElement> {
     variant?: "user" | "agent";

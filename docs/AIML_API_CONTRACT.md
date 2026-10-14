@@ -347,7 +347,7 @@ Routes that depend on Azure services return `503` with `code: "not_configured"` 
 
 - **Logs:** structured JSON via `structlog`, including `request_id`, `route`, `user_id`, `tokens_in`, `tokens_out`, `latency_ms`, `status`.
 - **Tracing:** OpenTelemetry FastAPI + httpx instrumentation. Spans are exported when `OTEL_EXPORTER_OTLP_ENDPOINT` is set.
-- **Audit log:** Every AI call writes one row to `AiAuditLog` (see `packages/database/prisma/schema.prisma`). Surfaced via `GET /v1/audit/logs`.
+- **Audit log:** Every AI call writes one row to Python's `public.aiml_audit_logs` (`AiAuditLog` in `apps/aiml-service/app/db/models.py`). Surfaced via `GET /v1/audit/logs`.
 
 ---
 
@@ -446,8 +446,8 @@ output schemas are Pydantic-validated; the `ToolExecutor` writes one
 
 | Tool | Input schema | Output schema | Notes |
 | --- | --- | --- | --- |
-| `lookup_order` | `{ "orderNumber": "ORD-..." }` | `{ "status": "...", "items": [...], "trackingId": "...", "carrier": "...", "deliveryDate": "ISO8601-or-null", "totalAmount": float }` | Reads Prisma `Order` table |
-| `lookup_payment` | `{ "invoiceNumber": "INV-..." }` | `{ "amount": float, "status": "...", "method": "...", "refundStatus": "...-or-null", "refundAmount": float-or-null }` | Reads Prisma `Payment` |
+| `lookup_order` | `{ "orderNumber": "ORD-..." }` | `{ "status": "...", "items": [...], "trackingId": "...", "carrier": "...", "deliveryDate": "ISO8601-or-null", "totalAmount": float }` | Reads Prisma `support_app."Order"` table |
+| `lookup_payment` | `{ "invoiceNumber": "INV-..." }` | `{ "amount": float, "status": "...", "method": "...", "refundStatus": "...-or-null", "refundAmount": float-or-null }` | Reads Prisma `support_app."Payment"` |
 | `search_knowledge_base` | `{ "query": "string", "topK": 1-10 }` | `{ "hits": [{ "id": "...", "snippet": "...", "score": float }] }` | Calls `/v1/search/semantic` if Azure Search is configured, otherwise falls back to pgvector |
 | `create_support_ticket` | `{ "summary": "string", "priority": "low\|normal\|high\|urgent" }` | `{ "ticketId": "uuid", "status": "open" }` | Writes a row to `aiml_tickets` |
 | `escalate_to_human` | `{ "reason": "string" }` | `{ "queued": true, "channel": "ws-handoff" }` | Pushes a frame onto the WS handoff queue keyed by `conversationId` |

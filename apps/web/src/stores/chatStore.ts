@@ -1,6 +1,6 @@
+import { type AgentType } from "@repo/shared-types";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { type AgentType } from "@repo/shared-types";
 
 export interface Message {
     id: string;

@@ -46,5 +46,8 @@
     "db:seed": {
       "cache": false
     }
-  }
+  },
+  "globalPassThroughEnv": [
+    "DATABASE_URL"
+  ]
 }

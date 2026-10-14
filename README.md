@@ -24,7 +24,7 @@ The web app sends chat requests to the Hono API, which runs the support, order, 
 
 ## Start the web and API
 
-Requirements: Node.js 22 or later, pnpm 10.28.0, PostgreSQL, and a Groq API key. Redis/Upstash configuration is optional for the JavaScript rate-limiting path.
+Requirements: Node.js 22 or later, pnpm 10.28.0, PostgreSQL, and a Groq API key. Use PostgreSQL with pgvector when running the Python service too. Redis/Upstash configuration is optional for the JavaScript rate-limiting path.
 
 From the repository root:
 
@@ -35,19 +35,21 @@ cp apps/web/.env.example apps/web/.env.local
 
 Set `DATABASE_URL` and `GROQ_API_KEY` in `apps/api/.env`. Keep `NEXT_PUBLIC_API_URL=http://localhost:3001/api` in the web environment for local use. Use a plain PostgreSQL URL without the Prisma-only `?schema=public` parameter when sharing the database with Python. Export the same URL in your shell so Prisma commands can read it:
 
+Use a fresh, disposable development database for the commands below. Sample seeding clears existing JavaScript application records. An existing database with application tables in `public` needs a separately reviewed migration; these commands do not move its data. See [database ownership](packages/database/prisma/README.md).
+
 ```bash
 export DATABASE_URL='postgresql://USER:PASSWORD@localhost:5432/support'
-pnpm install
+pnpm install --frozen-lockfile
 pnpm db:generate
-pnpm db:push
+pnpm db:migrate:deploy
 pnpm db:seed
 pnpm build
 pnpm dev
 ```
 
-Use a disposable development database for schema push and sample seeding. The initial build creates the workspace packages consumed by the API. Open `http://localhost:3000`; the API defaults to port 3001. `GET /health` is liveness, while `GET /api/health/ready` checks database readiness.
+Prisma owns the `support_app` schema; Python's Alembic migrations own `public`. The initial build creates the workspace packages consumed by the API. Open `http://localhost:3000`; the API defaults to port 3001. `GET /health` is liveness, while `GET /api/health/ready` checks database readiness.
 
-Start a conversation in the chat interface and ask about one of the sample orders or invoices from the database seed.
+The seeded orders and invoices are demo fixtures. The web client's user-ID header handling still needs integration work before chat can be treated as a working end-to-end flow.
 
 ## Start the Python service
 
@@ -57,12 +59,12 @@ This service is started separately from `pnpm dev`. It requires Python 3.12, uv,
 cd apps/aiml-service
 cp .env.example .env
 export DATABASE_URL='postgresql://USER:PASSWORD@localhost:5432/support'
-uv sync
-uv run alembic upgrade head
-uv run uvicorn app.main:app --reload --port 8000
+uv sync --frozen
+uv run --frozen alembic upgrade head
+uv run --frozen uvicorn app.main:app --reload --port 8000
 ```
 
-Fill in the service environment before running migrations or requests. Shell environment variables override `.env`; keep the exported URL compatible with SQLAlchemy and asyncpg. Use the same underlying database as the TypeScript application when exercising order/payment lookup tools. Alembic manages the vector column that Prisma does not model. Set `AIML_SERVICE_URL=http://localhost:8000` in the API environment to use the Hono proxy routes.
+Fill in the service environment before running migrations or requests. Shell environment variables override `.env`; keep the exported URL compatible with SQLAlchemy and asyncpg. Use the same underlying database as the TypeScript application when exercising order/payment lookup tools. Alembic manages the Python tables and vector column in `public`; the lookup tools read `support_app."Order"` and `support_app."Payment"`. On a fresh database, the Prisma and Alembic migration steps can run in either order. Set `AIML_SERVICE_URL=http://localhost:8000` in the API environment to use the Hono proxy routes.
 
 See [the AIML service guide](apps/aiml-service/README.md) and [API contract](docs/AIML_API_CONTRACT.md) for bearer-token scopes, ingestion, RAG queries, and streamed `/api/agent/run` requests. Azure Document Intelligence and Azure AI Search need their own configured accounts; unavailable optional integrations return configuration errors. Model and Azure service usage may incur charges.
 
@@ -97,9 +99,20 @@ uv run python tests/eval/run_eval.py --mode dry --threshold 0.6
 
 The Python suite has integration and credential-dependent paths. The dry evaluation is a local harness check, not a measurement of a live model's quality. Root pnpm commands cover workspace packages and do not run the Python suite.
 
+To check both fresh database setup orders and repeated migrations, use a loopback PostgreSQL server with pgvector and an account allowed to create disposable databases:
+
+```bash
+export DATABASE_SETUP_ADMIN_URL='postgresql://USER:PASSWORD@127.0.0.1:5432/postgres'
+uv run --project apps/aiml-service --frozen python scripts/test_database_setup.py
+```
+
+The check creates and removes its own databases, preserves synthetic vectors and application records across repeated deploy/schema-push steps, and runs the real database lookup tools with provider keys cleared. CI runs it on PostgreSQL 16.
+
 ## Deployment and limits
 
 `railway.toml` defines the API build/start command and `/health` probe. `vercel.json` configures the web deployment. Provision the database, provider credentials, and Python service separately before using those configurations. A liveness response alone does not establish database or provider readiness.
+
+Dependency advisory reports remain open. Hosted deployments, provider calls, authentication, and RAG have not been verified. Ingestion and retrieval currently use different table contracts and still need integration work. The database checks do not establish that chat or RAG works. Python `/ready` skips OpenAI when no provider key is configured; Hono readiness gates on the database and treats its AIML upstream check as informational.
 
 ## License
 

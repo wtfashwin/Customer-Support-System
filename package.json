@@ -21,7 +21,8 @@
     "db:seed": "pnpm --filter @repo/database db:seed",
     "db:studio": "pnpm --filter @repo/database db:studio",
     "clean": "turbo clean && rm -rf node_modules",
-    "postinstall": "pnpm --filter @repo/database db:generate"
+    "postinstall": "pnpm --filter @repo/database db:generate",
+    "db:migrate:deploy": "pnpm --filter @repo/database db:migrate:deploy"
   },
   "devDependencies": {
     "turbo": "^2.3.0",

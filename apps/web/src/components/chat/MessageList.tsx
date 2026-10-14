@@ -1,11 +1,13 @@
 "use client";
 
-import { useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRef, useEffect } from "react";
+
 import { Avatar } from "@/components/ui/Avatar";
-import { AgentBadge } from "./AgentBadge";
 import { formatTime } from "@/lib/utils";
 import type { Message } from "@/stores/chatStore";
+
+import { AgentBadge } from "./AgentBadge";
 
 interface MessageListProps {
     messages: Message[];
